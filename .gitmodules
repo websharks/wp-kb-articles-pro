@@ -1,0 +1,9 @@
+[submodule "wp-kb-articles-pro/submodules/parsedown"]
+	path = wp-kb-articles-pro/submodules/parsedown
+	url = https://github.com/erusev/parsedown
+[submodule "wp-kb-articles-pro/submodules/wp-php-rv"]
+	path = wp-kb-articles-pro/submodules/wp-php-rv
+	url = https://github.com/websharks/wp-php-rv
+[submodule "wp-kb-articles-pro/submodules/sharkicons"]
+	path = wp-kb-articles-pro/submodules/sharkicons
+	url = https://github.com/websharks/sharkicons
