@@ -489,12 +489,12 @@ namespace wp_kb_articles
 				 */
 				add_filter('cron_schedules', array($this, 'extend_cron_schedules'), 10, 1);
 
-				if((integer)$this->options['crons_setup'] < 1382523750)
+				if(substr($this->options['crons_setup'], -4) !== '-pro' || (integer)$this->options['crons_setup'] < 1382523750)
 				{
 					wp_clear_scheduled_hook('_cron_'.__NAMESPACE__.'_github_processor');
 					wp_schedule_event(time() + 60, 'every15m', '_cron_'.__NAMESPACE__.'_github_processor');
 
-					$this->options['crons_setup'] = (string)time();
+					$this->options['crons_setup'] = time().'-pro'; // With `-pro` suffix.
 					update_option(__NAMESPACE__.'_options', $this->options);
 				}
 				add_action('_cron_'.__NAMESPACE__.'_github_processor', array($this, 'github_processor'), 10);
