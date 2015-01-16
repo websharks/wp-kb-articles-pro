@@ -325,7 +325,8 @@ namespace wp_kb_articles // Root namespace.
 
 					unset($_author_user); // Housekeeping.
 				}
-				$this->status = strtolower($this->status);
+				$this->author = (integer)$this->author; // Force integer value.
+				$this->status = strtolower($this->status); // Force lowercase.
 
 				if($this->body && $this->plugin->options['github_markdown_parse'])
 					if($this->plugin->utils_fs->extension($this->path) === 'md') // Parse Markdown?
@@ -342,15 +343,9 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function mirror()
 			{
-				$this->set_current_author(); // To the author.
-				add_filter('pre_option_use_balanceTags', '__return_zero', 4488573);
-
 				if($this->is_new)
 					$this->insert();
 				else $this->update();
-
-				remove_filter('pre_option_use_balanceTags', '__return_zero', 4488573);
-				$this->restore_current_user(); // Restore.
 			}
 
 			/**
@@ -443,35 +438,6 @@ namespace wp_kb_articles // Root namespace.
 				if($this->tags) // Updating tags in this case?
 					if(is_wp_error($_ = wp_set_object_terms($this->post->ID, $this->tags, $this->plugin->post_type.'_tag')))
 						throw new \exception(sprintf(__('Tag update failure. %1$s', $this->plugin->text_domain), $_->get_error_message()));
-			}
-
-			/**
-			 * Sets the current user (author).
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected function set_current_author()
-			{
-				if($this->author) // Always a user ID.
-					return wp_set_current_user($this->author);
-
-				if(!$this->is_new && $this->post->post_author)
-					return wp_set_current_user($this->post->post_author);
-
-				if(is_numeric($this->plugin->options['github_mirror_author']))
-					return wp_set_current_user((integer)$this->plugin->options['github_mirror_author']);
-
-				return wp_set_current_user(0, $this->plugin->options['github_mirror_author']);
-			}
-
-			/**
-			 * Restores the current user.
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected function restore_current_user()
-			{
-				return wp_set_current_user($this->current_user->ID);
 			}
 		}
 	}

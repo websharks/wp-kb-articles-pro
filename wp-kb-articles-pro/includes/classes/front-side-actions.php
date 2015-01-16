@@ -46,6 +46,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->valid_actions = array(
 					'sc_list_via_ajax',
 					'cast_popularity_vote_via_ajax',
+					'github_processor_via_ajax',
 				);
 				$this->maybe_handle();
 			}
@@ -116,6 +117,28 @@ namespace wp_kb_articles // Root namespace.
 				status_header(200); // Return response.
 				header('Content-Type: text/plain; charset=UTF-8');
 				exit((string)(integer)$this->plugin->utils_post->cast_popularity_vote($post_id));
+			}
+
+			/**
+			 * Manual GitHub processor.
+			 *
+			 * @since 150113 First documented version.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_processor_via_ajax($request_args)
+			{
+				$this->is_doing_ajax = TRUE;
+				$request_args        = NULL;
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				new github_processor();
+
+				status_header(200); // Return response.
+				header('Content-Type: text/plain; charset=UTF-8');
+				exit(__('GitHub processing complete.', $this->plugin->text_domain));
 			}
 		}
 	}

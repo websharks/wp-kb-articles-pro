@@ -21,13 +21,6 @@ namespace wp_kb_articles // Root namespace.
 		class github_processor extends abs_base
 		{
 			/**
-			 * @var boolean A CRON job?
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $is_cron;
-
-			/**
 			 * @var integer Start time.
 			 *
 			 * @since 150113 First documented version.
@@ -88,9 +81,6 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param boolean      $is_cron Is this a CRON job?
-			 *    Defaults to a `TRUE` value. If calling directly pass `FALSE`.
-			 *
 			 * @param integer|null $max_time Max time (in seconds).
 			 *
 			 *    This cannot be less than `10` seconds.
@@ -112,11 +102,9 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 *    * A default value is taken from the plugin options.
 			 */
-			public function __construct($is_cron = TRUE, $max_time = NULL, $delay = NULL, $max_limit = NULL)
+			public function __construct($max_time = NULL, $delay = NULL, $max_limit = NULL)
 			{
 				parent::__construct();
-
-				$this->is_cron = (boolean)$is_cron;
 
 				$this->start_time = time(); // Start time.
 
@@ -148,7 +136,9 @@ namespace wp_kb_articles // Root namespace.
 				$this->processed_file_counter = 0; // Initialize; zero for now.
 				$this->github_api             = NULL; // Initialize.
 
-				$this->maybe_prep_cron_job();
+				$this->prep_cron_job();
+				$this->prep_current_user();
+				$this->prep_wp_filters();
 				$this->maybe_process();
 			}
 
@@ -157,11 +147,8 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected function maybe_prep_cron_job()
+			protected function prep_cron_job()
 			{
-				if(!$this->is_cron)
-					return; // Not applicable.
-
 				ignore_user_abort(TRUE);
 
 				@set_time_limit($this->max_time); // Max time only (first).
@@ -172,6 +159,35 @@ namespace wp_kb_articles // Root namespace.
 				if($this->delay) // Allow some extra time for the delay?
 					@set_time_limit(min(300, ceil($this->max_time + ($this->delay / 1000) + 30)));
 				else @set_time_limit(min(300, $this->max_time + 30));
+			}
+
+			/**
+			 * Prep current user.
+			 *
+			 * @since 150113 First documented version.
+			 */
+			protected function prep_current_user()
+			{
+				if(!($admins = get_users(array('role' => 'administrator', 'fields' => array('ID'), 'number' => 1))))
+					throw new \exception(__('Unable to find an administrator.', $this->plugin->text_domain));
+
+				wp_set_current_user($admins[0]->ID); // Set current user.
+			}
+
+			/**
+			 * Prep WordPress filters.
+			 *
+			 * @since 150113 First documented version.
+			 */
+			protected function prep_wp_filters()
+			{
+				remove_all_filters('content_save_pre');
+				remove_all_filters('pre_post_content');
+
+				remove_all_filters('excerpt_save_pre');
+				remove_all_filters('pre_post_excerpt');
+
+				kses_remove_filters(); // After setting current user.
 			}
 
 			/**
