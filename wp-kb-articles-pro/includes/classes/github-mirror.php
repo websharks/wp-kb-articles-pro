@@ -342,12 +342,15 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function mirror()
 			{
-				$this->set_current_author(); // To current author of this article.
+				$this->set_current_author(); // To the author.
+				add_filter('pre_option_use_balanceTags', '__return_zero', 4488573);
 
-				if($this->is_new) $this->insert(); // Insert new article.
-				else $this->update(); // Update existing.
+				if($this->is_new)
+					$this->insert();
+				else $this->update();
 
-				$this->restore_current_user(); // Restore actual current user.
+				remove_filter('pre_option_use_balanceTags', '__return_zero', 4488573);
+				$this->restore_current_user(); // Restore.
 			}
 
 			/**
@@ -376,7 +379,7 @@ namespace wp_kb_articles // Root namespace.
 					'comment_status' => $this->comment_status,
 					'ping_status'    => $this->ping_status,
 				);
-				if(!($ID = wp_insert_post($data)) || !($this->post = get_post($ID)))
+				if(!($ID = wp_insert_post(wp_slash($data))) || !($this->post = get_post($ID)))
 					throw new \exception(__('Insertion failure.', $this->plugin->text_domain));
 
 				$this->maybe_update_terms(); // Updates terms; i.e. categories/tags.
@@ -414,7 +417,7 @@ namespace wp_kb_articles // Root namespace.
 				if($this->comment_status) $data['comment_status'] = $this->comment_status;
 				if($this->ping_status) $data['ping_status'] = $this->ping_status;
 
-				if(!wp_update_post($data)) // Update failure?
+				if(!wp_update_post(wp_slash($data))) // Update failure?
 					throw new \exception(__('Update failure.', $this->plugin->text_domain));
 
 				$this->maybe_update_terms(); // Updates terms; i.e. categories/tags.
