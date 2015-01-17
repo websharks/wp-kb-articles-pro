@@ -396,7 +396,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
 
 				if($this->issue) // Only if used by this site.
-					$this->plugin->utils_github->update_issue($this->post->ID, $this->issue);
+					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
@@ -438,7 +438,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
 
 				if($this->issue) // Only if used by this site.
-					$this->plugin->utils_github->update_issue($this->post->ID, $this->issue);
+					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
