@@ -197,24 +197,8 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function maybe_process()
 			{
-				if(!$this->plugin->options['github_processing_enable'])
-					return; // Disabled currently.
-
-				if(!$this->plugin->options['github_mirror_owner'])
-					return; // Not possible.
-
-				if(!$this->plugin->options['github_mirror_repo'])
-					return; // Not possible.
-
-				if(!$this->plugin->options['github_mirror_branch'])
-					return; // Not possible.
-
-				if(!$this->plugin->options['github_mirror_api_key'])
-					if(!$this->plugin->options['github_mirror_username'] || !$this->plugin->options['github_mirror_password'])
-						return; // possible.
-
-				if(!$this->plugin->options['github_mirror_author'])
-					return; // Not possible.
+				if(!$this->plugin->utils_github->enabled_configured())
+					return; // Not enabled; or not configured properly.
 
 				$this->github_api = new github_api(
 					array(

@@ -1,23 +1,28 @@
 <div class="[namespace]-footer font-body">
 	<div class="-meta">
 
-		<div class="-popularity-tags">
+		<div class="-popularity-tags-feedback">
 			<div class="-popularity">
 				[popularity]
 			</div>
 			[if tags]
-			<div class="-tags">
-				<em>Tagged:</em> [tags]
-			</div>
+				<div class="-tags">
+					<em>Tagged:</em> [tags]
+				</div>
+			[endif]
+			[if github_enabled_configured && github_issue_feedback_enable]
+				<div class="-feedback">
+					How can we <a href="[github_issue_url]">improve this article</a>?
+				</div>
 			[endif]
 		</div>
 
 		<div class="-author-popularity">
 			<div class="-author">
 				[if show_avatars]
-				<div class="-avatar">
-					<a href="[author_posts_url]">[author_avatar]</a>
-				</div>
+					<div class="-avatar">
+						<a href="[author_posts_url]">[author_avatar]</a>
+					</div>
 				[endif]
 				<div class="-byline">
 					<span class="-by">Article written by:</span>
