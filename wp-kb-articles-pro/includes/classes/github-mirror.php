@@ -328,12 +328,10 @@ namespace wp_kb_articles // Root namespace.
 				$this->author = (integer)$this->author; // Force integer value.
 				$this->status = strtolower($this->status); // Force lowercase.
 
-				if($this->body && $this->plugin->options['github_markdown_parse'])
-					if($this->plugin->utils_fs->extension($this->path) === 'md') // Parse Markdown?
-						$this->body = $this->plugin->utils_string->markdown($this->body);
-
 				$this->comment_status = strtolower($this->comment_status);
 				$this->ping_status    = strtolower($this->ping_status);
+
+				if($this->body) $this->apply_body_filters();
 			}
 
 			/**
@@ -438,6 +436,21 @@ namespace wp_kb_articles // Root namespace.
 				if($this->tags) // Updating tags in this case?
 					if(is_wp_error($_ = wp_set_object_terms($this->post->ID, $this->tags, $this->plugin->post_type.'_tag')))
 						throw new \exception(sprintf(__('Tag update failure. %1$s', $this->plugin->text_domain), $_->get_error_message()));
+			}
+
+			/**
+			 * Applies body filters.
+			 *
+			 * @since 150113 First documented version.
+			 */
+			protected function apply_body_filters()
+			{
+				if(!$this->body) // Do we have a body?
+					return; // Nothing to do here.
+
+				if($this->plugin->options['github_markdown_parse'])
+					if($this->plugin->utils_fs->extension($this->path) === 'md')
+						$this->body = $this->plugin->utils_string->markdown($this->body);
 			}
 		}
 	}
