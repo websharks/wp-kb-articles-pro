@@ -17,11 +17,11 @@ namespace wp_kb_articles;
 
 	<div class="-meta">
 
-		<div class="-popularity-tags">
+		<div class="-popularity-tags-feedback">
 			<div class="-popularity">
-				<?php echo esc_html($plugin->utils_post->get_popularity(get_the_ID())); ?>
+				<?php echo esc_html($plugin->utils_post->get_popularity($post->ID)); ?>
 			</div>
-			<?php if(($_terms = get_the_terms(get_the_ID(), $plugin->post_type.'_tag'))): ?>
+			<?php if(($_terms = get_the_terms($post->ID, $plugin->post_type.'_tag'))): ?>
 				<div class="-tags">
 					<em><?php echo __('Tagged:', $plugin->text_domain); ?></em>
 					<?php $_tags = ''; // Initialize.
@@ -34,6 +34,11 @@ namespace wp_kb_articles;
 			<?php endif; // End if article has tags.
 			unset($_terms); // Housekeeping.
 			?>
+			<?php if($plugin->utils_github->enabled_configured() && $plugin->options['github_issue_feedback_enable']): ?>
+				<div class="-feedback">
+					<?php echo sprintf(__('How can we <a href="%1$s">improve this article</a>?', $plugin->text_domain), esc_attr($plugin->utils_github->get_issue_url($post->ID, TRUE))); ?>
+				</div>
+			<?php endif; ?>
 		</div>
 
 		<div class="-author-popularity">
@@ -51,7 +56,7 @@ namespace wp_kb_articles;
 					<span class="-date"><?php echo esc_html(get_the_date()); ?></span>
 				</div>
 			</div>
-			<a href="#" class="-popularity" data-post-id="<?php echo esc_attr(get_the_ID()); ?>">
+			<a href="#" class="-popularity" data-post-id="<?php echo esc_attr($post->ID); ?>">
 				<span class="-vote">
 					<strong><?php echo __('Did you find this article helpful?', $plugin->text_domain); ?></strong>
 					<i class="fa fa-hand-o-right"></i> <?php echo __('Let the author know by clicking here!', $plugin->text_domain); ?>

@@ -25,7 +25,7 @@
 		margin-top : 1em;
 		border-top : 1px solid #E5E5E5;
 
-		& > .-popularity-tags
+		& > .-popularity-tags-feedback
 		{
 			@include clearfix;
 			margin : 1em 0 1em 0;
@@ -50,10 +50,31 @@
 			& > .-tags
 			{
 				display : inline-block;
+				margin  : 0 1em 0 0;
 
 				&::before
 				{
 					content                : '\f02c';
+					font-family            : FontAwesome;
+					-webkit-font-smoothing : antialiased;
+
+					float                  : left;
+					margin                 : 0 .25em 0 0;
+				}
+				&:not(:last-child)
+				{
+					float  : right;
+					margin : 0 0 0 1em;
+				}
+			}
+			& > .-feedback
+			{
+				display : inline-block;
+				margin  : 0 1em 0 0;
+
+				&::before
+				{
+					content                : '\f113';
 					font-family            : FontAwesome;
 					-webkit-font-smoothing : antialiased;
 
