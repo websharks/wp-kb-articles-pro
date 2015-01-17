@@ -31,6 +31,37 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Is GitHub processing enabled/configured?
+			 *
+			 * @since 150113 First documented version.
+			 *
+			 * @return boolean `TRUE` if enabled/configured.
+			 */
+			public function enabled_configured()
+			{
+				if(!$this->plugin->options['github_processing_enable'])
+					return FALSE; // Disabled currently.
+
+				if(!$this->plugin->options['github_mirror_owner'])
+					return FALSE; // Not possible.
+
+				if(!$this->plugin->options['github_mirror_repo'])
+					return FALSE; // Not possible.
+
+				if(!$this->plugin->options['github_mirror_branch'])
+					return FALSE; // Not possible.
+
+				if(!$this->plugin->options['github_mirror_api_key'])
+					if(!$this->plugin->options['github_mirror_username'] || !$this->plugin->options['github_mirror_password'])
+						return FALSE; // possible.
+
+				if(!$this->plugin->options['github_mirror_author'])
+					return FALSE; // Not possible.
+
+				return TRUE; // Enabled and configured properly.
+			}
+
+			/**
 			 * Converts a repo path into a WP slug.
 			 *
 			 * @since 150113 First documented version.
@@ -162,6 +193,75 @@ namespace wp_kb_articles // Root namespace.
 					return; // Not possible.
 
 				update_post_meta($post_id, __NAMESPACE__.'_github_sha', $sha);
+			}
+
+			/**
+			 * Gets issue URL for an article.
+			 *
+			 * @since 150117 Adding support for `github-issue:` in YAML config.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string Issue URL for the article.
+			 */
+			public function get_issue_url($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				return trim((string)get_post_meta($post_id, __NAMESPACE__.'_github_issue_url', TRUE));
+			}
+
+			/**
+			 * Updates issue URL for an article.
+			 *
+			 * @since 150117 Adding support for `github-issue:` in YAML config.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 * @param string  $issue Issue number or URL.
+			 */
+			public function update_issue_url($post_id, $issue)
+			{
+				if(!($post_id = (integer)$post_id))
+					return; // Not possible.
+
+				if(!($issue = $this->plugin->utils_string->trim((string)$issue, '', '#')))
+					return; // Not possible; issue empty after trimming.
+
+				$issue_url = $issue; // Assume it is already a URL by default.
+
+				if(is_numeric($issue)) // e.g. `github-issue: [number]`.
+					$issue_url = $this->repo_url().'/issues/'.urlencode($issue);
+
+				else if(preg_match('/^(?P<owner>[^\/]+)\/(?P<repo>[^\/]+)#(?P<issue>[1-9][0-9]*)$/', $issue, $_m))
+					// e.g. `github-issue: owner/repo#[number]`; as supported by all aspects of GitHub.
+					$issue_url = $this->base_url().'/'.urlencode($_m['owner']).'/'.urlencode($_m['repo']).'/issues/'.urlencode($_m['issue']);
+
+				update_post_meta($post_id, __NAMESPACE__.'_github_issue_url', $issue_url);
+			}
+
+			/**
+			 * GitHub repo URL for the configured repo.
+			 *
+			 * @since 150117 Adding support for `github-issue:` in YAML config.
+			 *
+			 * @return string The GitHub repo URL for the configured repo.
+			 */
+			public function repo_url()
+			{
+				return $this->base_url().'/'.urlencode($this->plugin->options['github_mirror_owner']).'/'.urlencode($this->plugin->options['github_mirror_repo']);
+			}
+
+			/**
+			 * GitHub base URL.
+			 *
+			 * @since 150117 Adding support for `github-issue:` in YAML config.
+			 *
+			 * @return string GitHub base URL.
+			 */
+			public function base_url()
+			{
+				return 'https://github.com';
 			}
 		}
 	}

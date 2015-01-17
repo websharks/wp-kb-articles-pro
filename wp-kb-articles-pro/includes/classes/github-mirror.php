@@ -39,6 +39,15 @@ namespace wp_kb_articles // Root namespace.
 			protected $current_user;
 
 			/**
+			 * File path.
+			 *
+			 * @since 150113 First documented version.
+			 *
+			 * @var string File path.
+			 */
+			protected $path;
+
+			/**
 			 * SHA1 hash.
 			 *
 			 * @since 150113 First documented version.
@@ -48,13 +57,13 @@ namespace wp_kb_articles // Root namespace.
 			protected $sha;
 
 			/**
-			 * File path.
+			 * Issue number/string/URL.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @var string File path.
+			 * @var string Issue number/string/URL.
 			 */
-			protected $path;
+			protected $issue;
 
 			/**
 			 * Post.
@@ -187,6 +196,7 @@ namespace wp_kb_articles // Root namespace.
 				$default_args = array(
 					'path'           => '', // e.g. `my/article.md`.
 					'sha'            => '', // SHA1 hash from GitHub.
+					'issue'          => '', // e.g. `1`, `owner/repo#1`, or `[URL]`.
 
 					'slug'           => '', // e.g. `my-article`.
 					'title'          => '', // e.g. My Article Title.
@@ -204,6 +214,9 @@ namespace wp_kb_articles // Root namespace.
 					'comment_status' => '', // `open` or `closed`.
 					'ping_status'    => '', // `open` or `closed`.
 				);
+				if(isset($args['github_issue']) && !isset($args['issue']))
+					$args['issue'] = $args['github_issue'];
+
 				if(isset($args['category']) && !isset($args['categories']))
 					$args['categories'] = $args['category'];
 
@@ -235,6 +248,8 @@ namespace wp_kb_articles // Root namespace.
 
 				if(!($this->sha = trim((string)$this->args['sha'])))
 					throw new \exception(__('Missing sha.', $this->plugin->text_domain));
+
+				$this->issue = trim((string)$this->args['issue']);
 
 				$this->slug  = trim((string)$this->args['slug']);
 				$this->title = trim((string)$this->args['title']);
@@ -379,6 +394,10 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->plugin->utils_github->update_path($this->post->ID, $this->path);
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
+
+				if($this->issue) // Only if used by this site.
+					$this->plugin->utils_github->update_issue($this->post->ID, $this->issue);
+
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
 
@@ -417,6 +436,10 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->plugin->utils_github->update_path($this->post->ID, $this->path);
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
+
+				if($this->issue) // Only if used by this site.
+					$this->plugin->utils_github->update_issue($this->post->ID, $this->issue);
+
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
 
