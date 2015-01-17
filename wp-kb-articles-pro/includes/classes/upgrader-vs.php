@@ -50,6 +50,26 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function run_handlers()
 			{
+				$this->from_v150113();
+			}
+
+			/**
+			 * Runs upgrade handler for this specific version.
+			 *
+			 * @since 150117 Adding support for `github-issue:`.
+			 */
+			protected function from_v150113()
+			{
+				if(version_compare($this->prev_version, '150113', '>'))
+					return; // Not applicable.
+
+				if(!($options = get_option(__NAMESPACE__.'_options')))
+					return; // Not applicable.
+
+				if(!isset($options['github_markdown_parse']))
+					return; // Not applicable.
+
+				$this->plugin->options_save(array('github_markdown_parse_enable' => $options['github_markdown_parse']));
 			}
 		}
 	}

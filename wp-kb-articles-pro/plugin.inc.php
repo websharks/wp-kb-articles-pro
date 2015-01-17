@@ -398,7 +398,8 @@ namespace wp_kb_articles
 					'github_mirror_api_key'                                         => '', // API key.
 					'github_mirror_author'                                          => '', // User login|ID.
 
-					'github_markdown_parse'                                         => '1', // Parse Markdown?
+					'github_issue_feedback_enable'                                  => '1', // `0|1`; enable?
+					'github_markdown_parse_enable'                                  => '1', // `0|1`; enable?
 
 					'github_processor_max_time'                                     => '30', // In seconds.
 					'github_processor_delay'                                        => '250', // In milliseconds.

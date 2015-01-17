@@ -471,7 +471,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!$this->body) // Do we have a body?
 					return; // Nothing to do here.
 
-				if($this->plugin->options['github_markdown_parse'])
+				if($this->plugin->options['github_markdown_parse_enable'])
 					if($this->plugin->utils_fs->extension($this->path) === 'md')
 						$this->body = $this->plugin->utils_string->markdown($this->body);
 			}
