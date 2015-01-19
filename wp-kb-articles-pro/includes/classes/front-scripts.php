@@ -33,6 +33,7 @@ namespace wp_kb_articles // Root namespace.
 					return; // Not applicable.
 
 				$this->maybe_enqueue_list_scripts();
+				$this->maybe_enqueue_toc_scripts();
 				$this->maybe_enqueue_footer_scripts();
 			}
 
@@ -60,17 +61,34 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Enqueue front-side scripts for article TOC.
+			 *
+			 * @since 150118 Adding TOC generation.
+			 */
+			protected function maybe_enqueue_toc_scripts()
+			{
+				if(!is_singular($this->plugin->post_type))
+					return; // Not a post/page.
+
+				wp_enqueue_script('jquery'); // Need jQuery.
+
+				add_action('wp_footer', function ()
+				{
+					$template = new template('site/articles/toc.js.php');
+					echo $template->parse(); // Inline `<script></script>`.
+
+				}, PHP_INT_MAX - 10); // After WP footer scripts!
+			}
+
+			/**
 			 * Enqueue front-side scripts for article footer.
 			 *
 			 * @since 150113 First documented version.
 			 */
 			protected function maybe_enqueue_footer_scripts()
 			{
-				if(empty($GLOBALS['post']) || !is_singular())
+				if(!is_singular($this->plugin->post_type))
 					return; // Not a post/page.
-
-				if($GLOBALS['post']->post_type !== $this->plugin->post_type)
-					return; // It's not a KB article post type.
 
 				wp_enqueue_script('jquery'); // Need jQuery.
 

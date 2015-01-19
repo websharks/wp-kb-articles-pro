@@ -407,6 +407,10 @@ namespace wp_kb_articles
 					'github_processor_max_limit'                                    => '100', // Total files.
 					'github_processor_realtime_max_limit'                           => '5', // Total files.
 
+					/* Related to TOC generation. */
+
+					'toc_generation_enable'                                         => '1', // `0|1`; enable?
+
 					/* Related to IP tracking. */
 
 					'prioritize_remote_addr'                                        => '0', // `0|1`; enable?
@@ -430,6 +434,10 @@ namespace wp_kb_articles
 					'template__type_a__site__articles__list___js___php'             => '', // HTML/PHP code.
 					'template__type_a__site__articles__list___css'                  => '', // CSS code.
 
+					'template__type_a__site__articles__toc___php'                   => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___js___php'              => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___css'                   => '', // CSS code.
+
 					'template__type_a__site__articles__footer___php'                => '', // HTML/PHP code.
 					'template__type_a__site__articles__footer___js___php'           => '', // HTML/PHP code.
 					'template__type_a__site__articles__footer___css'                => '', // CSS code.
@@ -437,6 +445,7 @@ namespace wp_kb_articles
 					# Simple snippet-based templates for the site.
 
 					'template__type_s__site__articles__snippet__list_article___php' => '', // HTML code.
+					'template__type_s__site__articles__snippet__toc___php'          => '', // HTML code.
 					'template__type_s__site__articles__snippet__footer___php'       => '', // HTML code.
 
 				); // Default options are merged with those defined by the site owner.
@@ -481,6 +490,7 @@ namespace wp_kb_articles
 				add_action('wp_print_styles', array($this, 'enqueue_front_styles'), 10, 0);
 
 				add_action('save_post_'.$this->post_type, array($this, 'save_article'), 10, 1);
+				add_filter('the_content', array($this, 'article_toc'), PHP_INT_MAX, 1);
 				add_filter('the_content', array($this, 'article_footer'), PHP_INT_MAX, 1);
 
 				add_shortcode('kb_articles_list', array($this, 'sc_list'));
@@ -1194,6 +1204,27 @@ namespace wp_kb_articles
 			}
 
 			/**
+			 * Handle article table of contents.
+			 *
+			 * @since 150118 Adding TOC generation.
+			 *
+			 * @attaches-to `the_content` filter.
+			 *
+			 * @param string $content The content.
+			 *
+			 * @return string The original `$content` w/ possible TOC markup.
+			 */
+			public function article_toc($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $content; // Not applicable.
+
+				$toc = new toc(); // TOC class instance.
+
+				return $toc->filter($content); // With table of contents.
+			}
+
+			/**
 			 * Handle article footer.
 			 *
 			 * @since 150113 First documented version.
@@ -1211,7 +1242,7 @@ namespace wp_kb_articles
 
 				$footer = new footer(); // Footer class instance.
 
-				return $content.$footer->content();
+				return $footer->filter($content); // With footer.
 			}
 
 			/*

@@ -183,6 +183,15 @@ namespace wp_kb_articles // Root namespace.
 			protected $ping_status;
 
 			/**
+			 * TOC enable?
+			 *
+			 * @since 150118 Adding TOC generation.
+			 *
+			 * @var string TOC enable?
+			 */
+			protected $toc_enable;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -213,6 +222,8 @@ namespace wp_kb_articles // Root namespace.
 
 					'comment_status' => '', // `open` or `closed`.
 					'ping_status'    => '', // `open` or `closed`.
+
+					'toc_enable'     => '', // `true` or `false`.
 				);
 				if(isset($args['github_issue']) && !isset($args['issue']))
 					$args['issue'] = $args['github_issue'];
@@ -266,6 +277,8 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->comment_status = trim((string)$this->args['comment_status']);
 				$this->ping_status    = trim((string)$this->args['ping_status']);
+
+				$this->toc_enable = trim((string)$this->args['toc_enable']);
 
 				# Convert to post ID, if possible.
 
@@ -346,6 +359,8 @@ namespace wp_kb_articles // Root namespace.
 				$this->comment_status = strtolower($this->comment_status);
 				$this->ping_status    = strtolower($this->ping_status);
 
+				$this->toc_enable = strtolower($this->toc_enable);
+
 				if($this->body) $this->apply_body_filters();
 			}
 
@@ -398,6 +413,9 @@ namespace wp_kb_articles // Root namespace.
 				if($this->issue) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
+				if(isset($this->toc_enable[0])) // Only if specified.
+					$this->plugin->utils_github->update_toc_enable($this->post->ID, $this->toc_enable);
+
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
 
@@ -439,6 +457,9 @@ namespace wp_kb_articles // Root namespace.
 
 				if($this->issue) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
+
+				if(isset($this->toc_enable[0])) // Only if specified.
+					$this->plugin->utils_github->update_toc_enable($this->post->ID, $this->toc_enable);
 
 				$this->plugin->utils_post->update_popularity($this->post->ID, 0);
 			}
