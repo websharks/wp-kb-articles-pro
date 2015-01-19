@@ -281,11 +281,11 @@ namespace wp_kb_articles // Root namespace.
 
 				if($this->is_new) // It's a new KB article; i.e. post?
 				{
-					if(!$this->slug) // Convert path to slug in this case.
-						$this->slug = $this->plugin->utils_github->path_to_slug($this->path);
-
 					if(!$this->title) // Get title from the body.
 						$this->title = $this->plugin->utils_github->body_title($this->body);
+
+					if(!$this->slug) // Convert title to slug in this case.
+						$this->slug = sanitize_title($this->title);
 
 					if(!$this->author) // Use default author in this case.
 						$this->author = $this->plugin->options['github_mirror_author'];

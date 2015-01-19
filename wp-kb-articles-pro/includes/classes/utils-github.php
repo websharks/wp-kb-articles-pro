@@ -62,26 +62,6 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Converts a repo path into a WP slug.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @param string $path GitHub repo path to a file.
-			 *
-			 * @return string Slugified path.
-			 */
-			public function path_to_slug($path)
-			{
-				$path = trim((string)$path);
-
-				$slug = preg_replace('/\.[^.]*$/', '', $path);
-				$slug = preg_replace('/[^a-z0-9]/i', '-', $slug);
-				$slug = trim($slug, '-');
-
-				return substr($slug, 0, 200);
-			}
-
-			/**
 			 * Builds a title based on the content of an article body.
 			 *
 			 * @since 150113 First documented version.

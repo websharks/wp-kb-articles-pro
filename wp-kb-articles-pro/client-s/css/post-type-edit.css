@@ -1,0 +1,30 @@
+/* ------------------------------------------------------------------------------------------------------------
+	Plugin-specific styles for KB articles in the post editing station.
+------------------------------------------------------------------------------------------------------------ */
+/*
+GitHub read-only content.
+*/
+#post-body-content .wp-kb-articles-github-readonly-content-enabled-notice
+{
+	color         : #000000;
+	background    : #FFFBCC;
+	border        : 1px solid #CECAA5;
+
+	padding       : .5em;
+	border-radius : .35em;
+	margin        : 1em 0 1em 0;
+	box-shadow    : 0 1px 0 0 rgba(0, 0, 0, .1);
+}
+#post-body-content #wp-content-wrap.wp-kb-articles-github-readonly-content-enabled
+{
+	padding-top : 0 !important;
+}
+#post-body-content #wp-content-editor-tools.wp-kb-articles-github-readonly-content-enabled,
+#post-body-content #ed_toolbar.wp-kb-articles-github-readonly-content-enabled
+{
+	display : none !important;
+}
+#post-body-content #content.wp-kb-articles-github-readonly-content-enabled
+{
+	margin-top : 0 !important;
+}
