@@ -62,26 +62,6 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Converts a repo path into a WP slug.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @param string $path GitHub repo path to a file.
-			 *
-			 * @return string Slugified path.
-			 */
-			public function path_to_slug($path)
-			{
-				$path = trim((string)$path);
-
-				$slug = preg_replace('/\.[^.]*$/', '', $path);
-				$slug = preg_replace('/[^a-z0-9]/i', '-', $slug);
-				$slug = trim($slug, '-');
-
-				return substr($slug, 0, 200);
-			}
-
-			/**
 			 * Builds a title based on the content of an article body.
 			 *
 			 * @since 150113 First documented version.
@@ -95,8 +75,9 @@ namespace wp_kb_articles // Root namespace.
 				$body = trim((string)$body);
 
 				foreach(explode("\n", $body) as $_line)
-					if(strpos($_line, '#') === 0 && ($_title = trim($_line, " \r\n\t\0\x0B".'#')))
-						return $_title; // Markdown title line.
+					if(strpos($_line, '#') === 0 && preg_match('/^#+ /', $_line))
+						if(($_title = trim($_line, " \r\n\t\0\x0B".'#')))
+							return $_title; // Markdown title line.
 				unset($_line, $_title); // Housekeeping.
 
 				return $this->plugin->utils_string->clip($body);
@@ -244,6 +225,42 @@ namespace wp_kb_articles // Root namespace.
 					$issue_url = $this->base_url().'/'.urlencode($_m['owner']).'/'.urlencode($_m['repo']).'/issues/'.urlencode($_m['issue']);
 
 				update_post_meta($post_id, __NAMESPACE__.'_github_issue_url', $issue_url);
+			}
+
+			/**
+			 * Gets TOC-enable value for an article.
+			 *
+			 * @since 150118 Adding TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string TOC-enable value.
+			 */
+			public function get_toc_enable($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				return trim((string)get_post_meta($post_id, __NAMESPACE__.'_toc_enable', TRUE));
+			}
+
+			/**
+			 * Updates TOC-enable value for an article.
+			 *
+			 * @since 150118 Adding TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 * @param string  $toc_enable TOC-enable value.
+			 */
+			public function update_toc_enable($post_id, $toc_enable)
+			{
+				if(!($post_id = (integer)$post_id))
+					return; // Not possible.
+
+				if(!strlen($toc_enable = trim((string)$toc_enable)))
+					return; // Not possible.
+
+				update_post_meta($post_id, __NAMESPACE__.'_toc_enable', $toc_enable);
 			}
 
 			/**

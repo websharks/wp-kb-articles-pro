@@ -400,11 +400,16 @@ namespace wp_kb_articles
 
 					'github_issue_feedback_enable'                                  => '1', // `0|1`; enable?
 					'github_markdown_parse_enable'                                  => '1', // `0|1`; enable?
+					'github_readonly_content_enable'                                => '1', // `0|1`; enable?
 
 					'github_processor_max_time'                                     => '30', // In seconds.
 					'github_processor_delay'                                        => '250', // In milliseconds.
 					'github_processor_max_limit'                                    => '100', // Total files.
 					'github_processor_realtime_max_limit'                           => '5', // Total files.
+
+					/* Related to TOC generation. */
+
+					'toc_generation_enable'                                         => '1', // `0|1`; enable?
 
 					/* Related to IP tracking. */
 
@@ -429,6 +434,10 @@ namespace wp_kb_articles
 					'template__type_a__site__articles__list___js___php'             => '', // HTML/PHP code.
 					'template__type_a__site__articles__list___css'                  => '', // CSS code.
 
+					'template__type_a__site__articles__toc___php'                   => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___js___php'              => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___css'                   => '', // CSS code.
+
 					'template__type_a__site__articles__footer___php'                => '', // HTML/PHP code.
 					'template__type_a__site__articles__footer___js___php'           => '', // HTML/PHP code.
 					'template__type_a__site__articles__footer___css'                => '', // CSS code.
@@ -436,6 +445,7 @@ namespace wp_kb_articles
 					# Simple snippet-based templates for the site.
 
 					'template__type_s__site__articles__snippet__list_article___php' => '', // HTML code.
+					'template__type_s__site__articles__snippet__toc___php'          => '', // HTML code.
 					'template__type_s__site__articles__snippet__footer___php'       => '', // HTML code.
 
 				); // Default options are merged with those defined by the site owner.
@@ -480,6 +490,7 @@ namespace wp_kb_articles
 				add_action('wp_print_styles', array($this, 'enqueue_front_styles'), 10, 0);
 
 				add_action('save_post_'.$this->post_type, array($this, 'save_article'), 10, 1);
+				add_filter('the_content', array($this, 'article_toc'), PHP_INT_MAX, 1);
 				add_filter('the_content', array($this, 'article_footer'), PHP_INT_MAX, 1);
 
 				add_shortcode('kb_articles_list', array($this, 'sc_list'));
@@ -671,19 +682,30 @@ namespace wp_kb_articles
 			 */
 			public function enqueue_admin_styles()
 			{
-				if(!$this->utils_env->is_menu_page(__NAMESPACE__.'*'))
-					return; // Nothing to do; not applicable.
+				if($this->utils_env->is_menu_page(__NAMESPACE__.'*'))
+				{
+					$deps = array('codemirror', 'font-awesome', 'sharkicons'); // Dependencies.
 
-				$deps = array('codemirror', 'font-awesome', 'sharkicons'); // Dependencies.
+					wp_enqueue_style('codemirror', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/codemirror.min.css'), array(), NULL, 'all');
+					wp_enqueue_style('codemirror-fullscreen', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/display/fullscreen.min.css'), array('codemirror'), NULL, 'all');
+					wp_enqueue_style('codemirror-ambiance-theme', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/theme/ambiance.min.css'), array('codemirror'), NULL, 'all');
 
-				wp_enqueue_style('codemirror', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/codemirror.min.css'), array(), NULL, 'all');
-				wp_enqueue_style('codemirror-fullscreen', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/display/fullscreen.min.css'), array('codemirror'), NULL, 'all');
-				wp_enqueue_style('codemirror-ambiance-theme', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/theme/ambiance.min.css'), array('codemirror'), NULL, 'all');
+					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+					wp_enqueue_style('sharkicons', $this->utils_url->to('/submodules/sharkicons/styles.min.css'), array(), NULL, 'all');
 
-				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
-				wp_enqueue_style('sharkicons', $this->utils_url->to('/submodules/sharkicons/styles.min.css'), array(), NULL, 'all');
+					wp_enqueue_style(__NAMESPACE__, $this->utils_url->to('/client-s/css/menu-pages.min.css'), $deps, $this->version, 'all');
+				}
+				else if($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
+				        && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type
+				) // If we are editing a post, and if the the post type indicates it's a KB article.
+				{
+					$deps = array('font-awesome', 'sharkicons'); // Dependencies.
 
-				wp_enqueue_style(__NAMESPACE__, $this->utils_url->to('/client-s/css/menu-pages.min.css'), $deps, $this->version, 'all');
+					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+					wp_enqueue_style('sharkicons', $this->utils_url->to('/submodules/sharkicons/styles.min.css'), array(), NULL, 'all');
+
+					wp_enqueue_style(__NAMESPACE__.'-edit', $this->utils_url->to('/client-s/css/post-type-edit.min.css'), $deps, $this->version, 'all');
+				}
 			}
 
 			/**
@@ -695,28 +717,50 @@ namespace wp_kb_articles
 			 */
 			public function enqueue_admin_scripts()
 			{
-				if(!$this->utils_env->is_menu_page(__NAMESPACE__.'*'))
-					return; // Nothing to do; NOT a plugin menu page.
+				if($this->utils_env->is_menu_page(__NAMESPACE__.'*'))
+				{
+					$deps = array('jquery', 'codemirror'); // Dependencies.
 
-				$deps = array('jquery', 'codemirror'); // Dependencies.
+					wp_enqueue_script('codemirror', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/codemirror.min.js'), array(), NULL, TRUE);
+					wp_enqueue_script('codemirror-fullscreen', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/display/fullscreen.min.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-matchbrackets', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/edit/matchbrackets.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-htmlmixed', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/htmlmixed/htmlmixed.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-xml', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/xml/xml.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-javascript', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/javascript/javascript.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-css', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/css/css.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-clike', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/clike/clike.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script('codemirror-php', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/php/php.js'), array('codemirror'), NULL, TRUE);
 
-				wp_enqueue_script('codemirror', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/codemirror.min.js'), array(), NULL, TRUE);
-				wp_enqueue_script('codemirror-fullscreen', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/display/fullscreen.min.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-matchbrackets', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/edit/matchbrackets.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-htmlmixed', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/htmlmixed/htmlmixed.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-xml', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/xml/xml.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-javascript', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/javascript/javascript.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-css', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/css/css.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-clike', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/clike/clike.js'), array('codemirror'), NULL, TRUE);
-				wp_enqueue_script('codemirror-php', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/mode/php/php.js'), array('codemirror'), NULL, TRUE);
+					wp_enqueue_script(__NAMESPACE__, $this->utils_url->to('/client-s/js/menu-pages.min.js'), $deps, $this->version, TRUE);
 
-				wp_enqueue_script(__NAMESPACE__, $this->utils_url->to('/client-s/js/menu-pages.min.js'), $deps, $this->version, TRUE);
+					wp_localize_script(__NAMESPACE__, __NAMESPACE__.'_vars', array(
+						'pluginUrl'    => rtrim($this->utils_url->to('/'), '/'),
+						'ajaxEndpoint' => rtrim($this->utils_url->page_nonce_only(), '/'),
+					));
+					wp_localize_script(__NAMESPACE__, __NAMESPACE__.'_i18n', array());
+				}
+				else if($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
+				        && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type
+				) // If we are editing a post, and if the the post type indicates it's a KB article.
+				{
+					$deps                           = array('jquery'); // Dependencies.
+					$github_readonly_content_enable = $this->utils_github->enabled_configured() && $this->options['github_readonly_content_enable']
+					                                  && $this->utils_github->get_sha((integer)$_REQUEST['post']);
 
-				wp_localize_script(__NAMESPACE__, __NAMESPACE__.'_vars', array(
-					'pluginUrl'    => rtrim($this->utils_url->to('/'), '/'),
-					'ajaxEndpoint' => rtrim($this->utils_url->page_nonce_only(), '/'),
-				));
-				wp_localize_script(__NAMESPACE__, __NAMESPACE__.'_i18n', array());
+					if($github_readonly_content_enable) // GitHub enabled/configured, and the content should be readonly?
+						add_filter('user_can_richedit', '__return_false'); // Disable the visual editor.
+
+					wp_enqueue_script(__NAMESPACE__.'-edit', $this->utils_url->to('/client-s/js/post-type-edit.min.js'), $deps, $this->version, TRUE);
+
+					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_vars', array(
+						'pluginUrl'                   => rtrim($this->utils_url->to('/'), '/'),
+						'ajaxEndpoint'                => rtrim($this->utils_url->page_nonce_only(), '/'),
+						'gitHubReadonlyContentEnable' => $github_readonly_content_enable,
+					));
+					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_i18n', array(
+						'gitHubReadonlyContentEnabled' => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying GitHub repo anyway.', $this->text_domain), esc_html($this->name)),
+					));
+				}
 			}
 
 			/**
@@ -1160,6 +1204,27 @@ namespace wp_kb_articles
 			}
 
 			/**
+			 * Handle article table of contents.
+			 *
+			 * @since 150118 Adding TOC generation.
+			 *
+			 * @attaches-to `the_content` filter.
+			 *
+			 * @param string $content The content.
+			 *
+			 * @return string The original `$content` w/ possible TOC markup.
+			 */
+			public function article_toc($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $content; // Not applicable.
+
+				$toc = new toc(); // TOC class instance.
+
+				return $toc->filter($content); // With table of contents.
+			}
+
+			/**
 			 * Handle article footer.
 			 *
 			 * @since 150113 First documented version.
@@ -1177,7 +1242,7 @@ namespace wp_kb_articles
 
 				$footer = new footer(); // Footer class instance.
 
-				return $content.$footer->content();
+				return $footer->filter($content); // With footer.
 			}
 
 			/*
