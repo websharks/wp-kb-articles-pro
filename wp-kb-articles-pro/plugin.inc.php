@@ -291,6 +291,13 @@ namespace wp_kb_articles
 			 * Public Properties (Defined by Various Hooks)
 			 */
 
+			/**
+			 * An array of all menu page hooks.
+			 *
+			 * @since 150113 First documented version.
+			 *
+			 * @var array An array of all menu page hooks.
+			 */
 			public $menu_page_hooks = array();
 
 			/*
@@ -1321,7 +1328,8 @@ namespace wp_kb_articles
 					'menu_icon'    => 'data:image/svg+xml;base64,'.base64_encode($icon),
 					'map_meta_cap' => TRUE, 'capability_type' => array($this->post_type, $this->post_type.'s'),
 					'rewrite'      => array('slug' => $this->post_type_slug, 'with_front' => FALSE), // Like a Post (but no Post Formats).
-					'supports'     => array('title', 'editor', 'author', 'excerpt', 'revisions', 'thumbnail', 'custom-fields', 'comments', 'trackbacks')
+					'supports'     => array('title', 'editor', 'author', 'excerpt', 'revisions', 'thumbnail', 'custom-fields', 'comments', 'trackbacks'),
+					'taxonomies'   => array($this->post_type.'_category', $this->post_type.'_tag'),
 				);
 				$post_type_args['labels'] = array
 				(

@@ -31,10 +31,49 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->plugin->setup();
 
+				$this->create_db_tables();
+				$this->register_post_type();
 				$this->activate_post_type_role_caps();
+				$this->create_trending_popular_cats();
 				$this->maybe_enqueue_notice();
 				$this->flush_rewrite_rules();
 				$this->set_install_time();
+			}
+
+			/**
+			 * Create DB tables.
+			 *
+			 * @since 150131 Adding statistics.
+			 *
+			 * @throws \exception If table creation fails.
+			 */
+			protected function create_db_tables()
+			{
+				foreach(scandir($tables_dir = dirname(dirname(__FILE__)).'/tables') as $_sql_file)
+					if(substr($_sql_file, -4) === '.sql' && is_file($tables_dir.'/'.$_sql_file))
+					{
+						$_sql_file_table = substr($_sql_file, 0, -4);
+						$_sql_file_table = str_replace('-', '_', $_sql_file_table);
+						$_sql_file_table = $this->plugin->utils_db->prefix().$_sql_file_table;
+
+						$_sql = file_get_contents($tables_dir.'/'.$_sql_file);
+						$_sql = str_replace('%%prefix%%', $this->plugin->utils_db->prefix(), $_sql);
+						$_sql = $this->plugin->utils_db->fulltext_compat($_sql);
+
+						if(!$this->plugin->utils_db->wp->query($_sql)) // Table creation failure?
+							throw new \exception(sprintf(__('DB table creation failure. Table: `%1$s`. SQL: `%2$s`.', $this->plugin->text_domain), $_sql_file_table, $_sql));
+					}
+				unset($_sql_file, $_sql_file_table, $_sql); // Housekeeping.
+			}
+
+			/**
+			 * Register post type.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 */
+			protected function register_post_type()
+			{
+				$this->plugin->register_post_type();
 			}
 
 			/**
@@ -42,9 +81,23 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			public function activate_post_type_role_caps()
+			protected function activate_post_type_role_caps()
 			{
 				$this->plugin->post_type_role_caps('activate');
+			}
+
+			/**
+			 * Creates trending/popular categories.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 */
+			protected function create_trending_popular_cats()
+			{
+				if(!term_exists('trending', $this->plugin->post_type.'_category'))
+					wp_insert_term(__('Trending', $this->plugin->text_domain), $this->plugin->post_type.'_category', array('slug' => 'trending'));
+
+				if(!term_exists('popular', $this->plugin->post_type.'_category'))
+					wp_insert_term(__('Popular', $this->plugin->text_domain), $this->plugin->post_type.'_category', array('slug' => 'popular'));
 			}
 
 			/**
@@ -69,7 +122,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			public function flush_rewrite_rules()
+			protected function flush_rewrite_rules()
 			{
 				flush_rewrite_rules();
 			}
