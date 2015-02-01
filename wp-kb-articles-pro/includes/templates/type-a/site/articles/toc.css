@@ -45,7 +45,11 @@
   color: #9B9B9B;
 }
 .wp_kb_articles-toc > .-list ul > li > a {
+  display: block;
   text-decoration: none;
+  white-space: pre;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 .wp_kb_articles-toc > .-list > ul > li {
   font-size: 100%;
