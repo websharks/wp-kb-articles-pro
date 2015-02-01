@@ -104,6 +104,7 @@ namespace wp_kb_articles // Root namespace.
 					'author'         => '', // Satisfy all; comma-delimited slugs/IDs.
 					'category'       => '', // Satisfy all; comma-delimited slugs/IDs.
 					'tab_categories' => 'trending,popular', // For tabs; comma-delimited slugs/IDs.
+					'trending_days'  => '7', // Number of days to use in trending calculation.
 					'tag'            => '', // Satisfy all; comma-delimited slugs/IDs.
 					'q'              => '', // Search query.
 
@@ -239,6 +240,8 @@ namespace wp_kb_articles // Root namespace.
 						unset($this->attr->tab_categories[$_key]);
 				}
 				unset($_key, $_category, $_term); // Housekeeping.
+
+				$this->attr->trending_days = min(1, (integer)$this->attr->trending_days);
 
 				$this->attr->tag = preg_split('/,+/', $this->attr->tag, NULL, PREG_SPLIT_NO_EMPTY);
 				$this->attr->tag = $this->plugin->utils_array->remove_emptys($this->plugin->utils_string->trim_deep($this->attr->tag));
@@ -517,7 +520,7 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			public function _trending_where_filter($where, \WP_Query $query)
 			{
-				return "AND `stats`.`ymd_time` >= '".esc_sql(strtotime('-7 days'))."' ".$where;
+				return "AND `stats`.`ymd_time` >= '".esc_sql(strtotime('-'.$this->attr->trending_days.' days'))."' ".$where;
 			}
 
 			/**
