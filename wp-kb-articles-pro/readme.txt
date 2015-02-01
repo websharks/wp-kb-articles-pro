@@ -1,6 +1,6 @@
 === WP KB Articles ===
 
-Stable tag: 150117
+Stable tag: 150201
 Requires at least: 4.1
 Tested up to: 4.2-alpha
 Text Domain: wp-kb-articles
@@ -76,6 +76,15 @@ Released under the terms of the [GNU General Public License](http://www.gnu.org/
 	- Font Awesome <http://fortawesome.github.io/Font-Awesome/>
 
 == Changelog ==
+
+= v150201 =
+
+* Optimizing search functionality.
+* Move article popularity (hearts) to last item in list view.
+* Differentiate "Filter by Tag" button in list view.
+* Add link to GitHub Integration options in read-only editor message.
+* Improving Table of Contents (TOC) display for each item; i.e. prevent text overflow.
+* "Trending" and "Popular" navigation tabs. See: [this GitHub issue](https://github.com/websharks/wp-kb-articles/issues/54) for further details.
 
 = v150117 =
 

@@ -1,3 +1,12 @@
+= v150201 =
+
+* Optimizing search functionality.
+* Move article popularity (hearts) to last item in list view.
+* Differentiate "Filter by Tag" button in list view.
+* Add link to GitHub Integration options in read-only editor message.
+* Improving Table of Contents (TOC) display for each item; i.e. prevent text overflow.
+* "Trending" and "Popular" navigation tabs. See: [this GitHub issue](https://github.com/websharks/wp-kb-articles/issues/54) for further details.
+
 = v150117 =
 
 * Rewriting with OOP design.
