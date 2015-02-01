@@ -82,7 +82,11 @@
 			}
 			& > a
 			{
+				display         : block;
 				text-decoration : none;
+				white-space     : pre;
+				text-overflow   : ellipsis;
+				overflow        : hidden;
 			}
 		}
 		& > ul > li
