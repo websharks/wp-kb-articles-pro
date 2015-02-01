@@ -758,7 +758,7 @@ namespace wp_kb_articles
 						'gitHubReadonlyContentEnable' => $github_readonly_content_enable,
 					));
 					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_i18n', array(
-						'gitHubReadonlyContentEnabled' => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying GitHub repo anyway.', $this->text_domain), esc_html($this->name)),
+						'gitHubReadonlyContentEnabled' => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying <a href="%2$s" target="_blank">GitHub Integration</a>.', $this->text_domain), esc_html($this->name), esc_attr($this->utils_url->main_menu_page_only())),
 					));
 				}
 			}
