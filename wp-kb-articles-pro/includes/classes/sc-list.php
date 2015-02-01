@@ -103,7 +103,7 @@ namespace wp_kb_articles // Root namespace.
 
 					'author'         => '', // Satisfy all; comma-delimited slugs/IDs.
 					'category'       => '', // Satisfy all; comma-delimited slugs/IDs.
-					'tab_categories' => '', // For tabs; comma-delimited slugs/IDs.
+					'tab_categories' => 'trending,popular', // For tabs; comma-delimited slugs/IDs.
 					'tag'            => '', // Satisfy all; comma-delimited slugs/IDs.
 					'q'              => '', // Search query.
 
