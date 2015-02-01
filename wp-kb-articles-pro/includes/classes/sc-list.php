@@ -426,24 +426,55 @@ namespace wp_kb_articles // Root namespace.
 					);
 				}
 				if(in_array($this->trending, $this->attr->category, TRUE))
-					add_filter('posts_where', array($this, 'trending_post_ids_filter'), 45645331, 2);
-
-				if(in_array($this->popular, $this->attr->category, TRUE))
-					add_filter('posts_where', array($this, 'popular_post_ids_filter'), 45645332, 2);
-
+				{
+					add_filter('posts_join', array($this, '_trending_join_filter'), 45645331, 2);
+					add_filter('posts_where', array($this, '_trending_where_filter'), 45645331, 2);
+					add_filter('posts_orderby', array($this, '_trending_orderby_filter'), 45645331, 2);
+				}
+				else if(in_array($this->popular, $this->attr->category, TRUE))
+				{
+					add_filter('posts_join', array($this, '_popular_join_filter'), 45645332, 2);
+					add_filter('posts_where', array($this, '_popular_where_filter'), 45645332, 2);
+					add_filter('posts_orderby', array($this, '_popular_orderby_filter'), 45645332, 2);
+				}
 				if($this->attr->q) // Searching? If so, add filter.
-					add_filter('posts_where', array($this, 'search_post_ids_filter'), 45645333, 2);
+					add_filter('posts_where', array($this, '_search_where_filter'), 45645333, 2);
 
 				$query = new \WP_Query($args); // Perform the query now.
-				remove_filter('posts_where', array($this, 'trending_post_ids_filter'), 45645331, 2);
-				remove_filter('posts_where', array($this, 'popular_post_ids_filter'), 45645332, 2);
-				remove_filter('posts_where', array($this, 'search_post_ids_filter'), 45645333, 2);
 
-				return $query;
+				remove_filter('posts_join', array($this, '_trending_join_filter'), 45645331);
+				remove_filter('posts_where', array($this, '_trending_where_filter'), 45645331);
+				remove_filter('posts_orderby', array($this, '_trending_orderby_filter'), 45645331);
+
+				remove_filter('posts_join', array($this, '_popular_join_filter'), 45645332);
+				remove_filter('posts_where', array($this, '_popular_where_filter'), 45645332);
+				remove_filter('posts_orderby', array($this, '_popular_orderby_filter'), 45645332);
+
+				remove_filter('posts_where', array($this, '_search_where_filter'), 45645333);
+
+				return $query; // Query class instance.
 			}
 
 			/**
-			 * Adding trending where clause.
+			 * Handles trending join filter.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_join` filter.
+			 *
+			 * @param string    $join The current JOINs.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$join` portion of the SQL.
+			 */
+			public function _trending_join_filter($join, \WP_Query $query)
+			{
+				return "INNER JOIN `".esc_sql($this->plugin->utils_db->prefix().'stats')."` AS `stats`".
+				       " ON(`".esc_sql($this->plugin->utils_db->wp->posts)."`.`ID` = `stats`.`post_id`) ".$join;
+			}
+
+			/**
+			 * Handles trending where clause.
 			 *
 			 * @since 150201 Adding trending/popular.
 			 *
@@ -452,15 +483,50 @@ namespace wp_kb_articles // Root namespace.
 			 * @param string    $where The current `WHERE` clause.
 			 * @param \WP_Query $query The current query.
 			 *
-			 * @return string Possible altered `$where` value.
+			 * @return string Possible altered `$where` clause.
 			 */
-			public function trending_post_ids_filter($where, \WP_Query $query)
+			public function _trending_where_filter($where, \WP_Query $query)
 			{
-				return $where;
+				return "AND `stats`.`ymd_time` >= '".esc_sql(strtotime('-7 days'))."' ".$where;
 			}
 
 			/**
-			 * Adding popular where clause.
+			 * Handles trending orderby clause.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_orderby` filter.
+			 *
+			 * @param string    $orderby The current `ORDER BY` clause.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$orderby` clause.
+			 */
+			public function _trending_orderby_filter($orderby, \WP_Query $query)
+			{
+				return "SUM(`stats`.`visits`) DESC, ".$orderby;
+			}
+
+			/**
+			 * Handles popular join filter.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_join` filter.
+			 *
+			 * @param string    $join The current JOINs.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$join` clause.
+			 */
+			public function _popular_join_filter($join, \WP_Query $query)
+			{
+				return "INNER JOIN `".esc_sql($this->plugin->utils_db->prefix().'stats')."` AS `stats`".
+				       " ON(`".esc_sql($this->plugin->utils_db->wp->posts)."`.`ID` = `stats`.`post_id`) ".$join;
+			}
+
+			/**
+			 * Handles popular where clause.
 			 *
 			 * @since 150201 Adding trending/popular.
 			 *
@@ -469,11 +535,28 @@ namespace wp_kb_articles // Root namespace.
 			 * @param string    $where The current `WHERE` clause.
 			 * @param \WP_Query $query The current query.
 			 *
-			 * @return string Possible altered `$where` value.
+			 * @return string Possible altered `$where` clause.
 			 */
-			public function popular_post_ids_filter($where, \WP_Query $query)
+			public function _popular_where_filter($where, \WP_Query $query)
 			{
-				return $where;
+				return $where; // No change at this time.
+			}
+
+			/**
+			 * Handles popular orderby clause.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_orderby` filter.
+			 *
+			 * @param string    $orderby The current `ORDER BY` clause.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$orderby` clause.
+			 */
+			public function _popular_orderby_filter($orderby, \WP_Query $query)
+			{
+				return "SUM(`stats`.`visits`) DESC, ".$orderby;
 			}
 
 			/**
@@ -486,9 +569,9 @@ namespace wp_kb_articles // Root namespace.
 			 * @param string    $where The current `WHERE` clause.
 			 * @param \WP_Query $query The current query.
 			 *
-			 * @return string Possible altered `$where` value.
+			 * @return string Possible altered `$where` clause.
 			 */
-			public function search_post_ids_filter($where, \WP_Query $query)
+			public function _search_where_filter($where, \WP_Query $query)
 			{
 				if(!($search_terms = $this->sql_search_terms()))
 					return $where; // Not possible.
