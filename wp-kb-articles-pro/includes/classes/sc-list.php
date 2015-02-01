@@ -57,6 +57,15 @@ namespace wp_kb_articles // Root namespace.
 			protected $trending = 0;
 
 			/**
+			 * A trending view?
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @var boolean A trending view?
+			 */
+			protected $is_trending = FALSE;
+
+			/**
 			 * Popular category ID.
 			 *
 			 * @since 150201 Adding trending/popular.
@@ -64,6 +73,15 @@ namespace wp_kb_articles // Root namespace.
 			 * @var integer Popular category ID.
 			 */
 			protected $popular = 0;
+
+			/**
+			 * A popular view?
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @var boolean A popular view?
+			 */
+			protected $is_popular = FALSE;
 
 			/**
 			 * Class constructor.
@@ -240,6 +258,18 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->attr->q   = trim((string)$this->attr->q);
 				$this->attr->url = trim((string)$this->attr->url);
+
+				$this->is_trending          = $this->trending && in_array($this->trending, $this->attr->category, TRUE);
+				$this->is_popular           = !$this->is_trending && $this->popular && in_array($this->popular, $this->attr->category, TRUE);
+				$this->attr->category_no_tp = array_diff($this->attr->category, array($this->trending, $this->popular));
+
+				if($this->is_trending) // Force a specific orderby set for a trending view?
+					// See also: {@link _trending_orderby_filter()} for additional adjustments to these.
+					$this->attr->orderby = array('meta_value_num' => 'DESC', 'comment_count' => 'DESC', 'date' => 'DESC');
+
+				else if($this->is_popular) // Force a specific orderby set for popular?
+					// See also: {@link _popular_orderby_filter()} for additional adjustments to these.
+					$this->attr->orderby = array('meta_value_num' => 'DESC', 'comment_count' => 'DESC', 'date' => 'DESC');
 			}
 
 			/**
@@ -400,14 +430,14 @@ namespace wp_kb_articles // Root namespace.
 				{
 					$args['author__in'] = $this->attr->author;
 				}
-				if(($categories = array_diff($this->attr->category, array($this->trending, $this->popular))))
+				if($this->attr->category_no_tp)
 				{
 					if(empty($args['tax_query']['relation']))
 						$args['tax_query']['relation'] = 'AND';
 
 					$args['tax_query'][] = array(
 						'taxonomy'         => $this->plugin->post_type.'_category',
-						'terms'            => $categories,
+						'terms'            => $this->attr->category_no_tp,
 						'field'            => 'id',
 						'include_children' => TRUE,
 						'operator'         => 'IN',
@@ -425,13 +455,13 @@ namespace wp_kb_articles // Root namespace.
 						'operator' => 'AND',
 					);
 				}
-				if(in_array($this->trending, $this->attr->category, TRUE))
+				if($this->is_trending) // This is a trending view?
 				{
 					add_filter('posts_join', array($this, '_trending_join_filter'), 45645331, 2);
 					add_filter('posts_where', array($this, '_trending_where_filter'), 45645331, 2);
 					add_filter('posts_orderby', array($this, '_trending_orderby_filter'), 45645331, 2);
 				}
-				else if(in_array($this->popular, $this->attr->category, TRUE))
+				else if($this->is_popular) // Popular view?
 				{
 					add_filter('posts_join', array($this, '_popular_join_filter'), 45645332, 2);
 					add_filter('posts_where', array($this, '_popular_where_filter'), 45645332, 2);
@@ -556,7 +586,8 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			public function _popular_orderby_filter($orderby, \WP_Query $query)
 			{
-				return "SUM(`stats`.`visits`) DESC, ".$orderby;
+				return preg_replace('/\b'.preg_quote($this->plugin->utils_db->wp->postmeta.'.meta_value+0 DESC,', '/').'\s*/i',
+				                    '${0}'." SUM(`stats`.`visits`) DESC, ", $orderby);
 			}
 
 			/**
