@@ -48,6 +48,24 @@ namespace wp_kb_articles // Root namespace.
 			protected $content;
 
 			/**
+			 * Trending category ID.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @var integer Trending category ID.
+			 */
+			protected $trending = 0;
+
+			/**
+			 * Popular category ID.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @var integer Popular category ID.
+			 */
+			protected $popular = 0;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -94,6 +112,14 @@ namespace wp_kb_articles // Root namespace.
 				$this->attr    = (object)$attr;
 				$this->attr_   = $attr; // Originals.
 				$this->content = (string)$content;
+
+				if(($_term_info = term_exists('trending', $this->plugin->post_type.'_category')))
+					$this->trending = (integer)$_term_info['term_id'];
+				unset($_term_info); // Housekeeping.
+
+				if(($_term_info = term_exists('popular', $this->plugin->post_type.'_category')))
+					$this->popular = (integer)$_term_info['term_id'];
+				unset($_term_info); // Housekeeping.
 
 				foreach($this->attr as $_prop => &$_value) // e.g. `page`, `author`, etc.
 					if(in_array($_prop, $this->plugin->qv_keys, TRUE) && ($_qv = get_query_var($this->plugin->qv_prefix.$_prop)))
@@ -374,14 +400,14 @@ namespace wp_kb_articles // Root namespace.
 				{
 					$args['author__in'] = $this->attr->author;
 				}
-				if($this->attr->category)
+				if(($categories = array_diff($this->attr->category, array($this->trending, $this->popular))))
 				{
 					if(empty($args['tax_query']['relation']))
 						$args['tax_query']['relation'] = 'AND';
 
 					$args['tax_query'][] = array(
 						'taxonomy'         => $this->plugin->post_type.'_category',
-						'terms'            => $this->attr->category,
+						'terms'            => $categories,
 						'field'            => 'id',
 						'include_children' => TRUE,
 						'operator'         => 'IN',
@@ -399,15 +425,55 @@ namespace wp_kb_articles // Root namespace.
 						'operator' => 'AND',
 					);
 				}
+				if(in_array($this->trending, $this->attr->category, TRUE))
+					add_filter('posts_where', array($this, 'trending_post_ids_filter'), 45645331, 2);
+
+				if(in_array($this->popular, $this->attr->category, TRUE))
+					add_filter('posts_where', array($this, 'popular_post_ids_filter'), 45645332, 2);
+
 				if($this->attr->q) // Searching? If so, add filter.
-					add_filter('posts_where', array($this, 'search_post_ids_filter'), 45645334, 2);
+					add_filter('posts_where', array($this, 'search_post_ids_filter'), 45645333, 2);
 
 				$query = new \WP_Query($args); // Perform the query now.
-
-				if($this->attr->q) // Searching? If so, remove filter.
-					remove_filter('posts_where', array($this, 'search_post_ids_filter'), 45645334, 2);
+				remove_filter('posts_where', array($this, 'trending_post_ids_filter'), 45645331, 2);
+				remove_filter('posts_where', array($this, 'popular_post_ids_filter'), 45645332, 2);
+				remove_filter('posts_where', array($this, 'search_post_ids_filter'), 45645333, 2);
 
 				return $query;
+			}
+
+			/**
+			 * Adding trending where clause.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_where` filter.
+			 *
+			 * @param string    $where The current `WHERE` clause.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$where` value.
+			 */
+			public function trending_post_ids_filter($where, \WP_Query $query)
+			{
+				return $where;
+			}
+
+			/**
+			 * Adding popular where clause.
+			 *
+			 * @since 150201 Adding trending/popular.
+			 *
+			 * @attaches-to `posts_where` filter.
+			 *
+			 * @param string    $where The current `WHERE` clause.
+			 * @param \WP_Query $query The current query.
+			 *
+			 * @return string Possible altered `$where` value.
+			 */
+			public function popular_post_ids_filter($where, \WP_Query $query)
+			{
+				return $where;
 			}
 
 			/**
