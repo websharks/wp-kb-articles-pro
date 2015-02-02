@@ -322,49 +322,35 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function parse_article($article)
 			{
-				$parts = array(
+				$parts   = array(
 					'headers' => array(),
 					'body'    => '',
 				);
-				// Normalize line breaks. Use "\n" for all line breaks.
 				$article = str_replace(array("\r\n", "\r"), "\n", $article);
-				$article = trim($article);
+				$article = trim($article); // Trim it up now.
 
 				if(strpos($article, '---'."\n") !== 0)
 				{
 					$parts['body'] = $article;
-					return $parts;
+					return $parts; // Body only.
 				}
 				$article_parts = preg_split('/^\-{3}$/m', $article, 3);
 
-				// If the article does NOT have three parts, it contains no YAML front matter.
 				if(count($article_parts) !== 3)
 				{
 					$parts['body'] = $article;
-					return $parts;
+					return $parts; // Body only.
 				}
-				list(, $article_headers_part, $article_body_part) = $article_parts;
+				list(, $article_headers, $parts['body']) = array_map('trim', $article_parts);
 
-				foreach(explode("\n", trim($article_headers_part)) as $_line)
+				foreach($this->plugin->utils_yaml->parse($article_headers) as $_name => $_value)
 				{
-					if(!($_line = trim($_line)))
-						continue; // Skip over empty lines.
-
-					if(strpos($_line, '#') === 0)
-						continue; // YAML comment line.
-
-					if(strpos($_line, ':', 1) !== FALSE)
-					{
-						list($_name, $_value) = explode(':', $_line, 2);
-						$_name                    = str_replace('-', '_', strtolower(trim($_name)));
-						$parts['headers'][$_name] = trim($_value);
-					}
+					$_name                    = str_replace('-', '_', strtolower(trim($_name)));
+					$parts['headers'][$_name] = trim($_value);
 				}
-				unset($_line, $_name, $_value); // Housekeeping.
+				unset($_name, $_value); // Housekeeping.
 
-				$parts['body'] = trim($article_body_part);
-
-				return $parts;
+				return $parts; // Headers and body.
 			}
 
 			/**
