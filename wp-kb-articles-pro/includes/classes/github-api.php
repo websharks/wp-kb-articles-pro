@@ -346,7 +346,7 @@ namespace wp_kb_articles // Root namespace.
 				foreach($this->plugin->utils_yaml->parse($article_headers) as $_name => $_value)
 				{
 					$_name                    = str_replace('-', '_', strtolower(trim($_name)));
-					$parts['headers'][$_name] = trim($_value);
+					$parts['headers'][$_name] = trim((string)$_value);
 				}
 				unset($_name, $_value); // Housekeeping.
 
