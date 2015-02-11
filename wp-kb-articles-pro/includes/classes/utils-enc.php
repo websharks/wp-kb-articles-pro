@@ -179,7 +179,7 @@ namespace wp_kb_articles // Root namespace.
 				   || !in_array('rijndael-256', mcrypt_list_algorithms(), TRUE)
 				   || !in_array('cbc', mcrypt_list_modes(), TRUE)
 				   || !strlen($e = $this->base64_url_safe_decode($base64))
-				   || !preg_match('/^~r2\:(?P<iv>[a-zA-Z0-9]+)(?:\:(?P<md5>[a-zA-Z0-9]+))?\|(?P<e>.*?)$/s', $e, $iv_md5_e)
+				   || !preg_match('/^~r2\:(?P<iv>[a-zA-Z0-9]+)(?:\:(?P<md5>[a-zA-Z0-9]+))?\|(?P<e>.*)$/s', $e, $iv_md5_e)
 				) return $this->xdecrypt($base64, $key); // Try XOR decryption instead :-)
 
 				if(!isset($iv_md5_e['iv'][0], $iv_md5_e['e'][0]))
@@ -272,7 +272,7 @@ namespace wp_kb_articles // Root namespace.
 					return ($string = ''); // Nothing to do.
 
 				if(!strlen($e = $this->base64_url_safe_decode($base64))
-				   || !preg_match('/^~xe(?:\:(?P<md5>[a-zA-Z0-9]+))?\|(?P<e>.*?)$/s', $e, $md5_e)
+				   || !preg_match('/^~xe(?:\:(?P<md5>[a-zA-Z0-9]+))?\|(?P<e>.*)$/s', $e, $md5_e)
 				) return ($string = ''); // Components missing.
 
 				if(!isset($md5_e['e'][0])) // Totally empty?
