@@ -150,7 +150,7 @@ namespace wp_kb_articles
 			 *
 			 * @var string Site name.
 			 */
-			public $site_name = 'websharks-inc.com';
+			public $site_name = 'WPKBArticles.com';
 
 			/**
 			 * Plugin product page URL.
@@ -159,7 +159,7 @@ namespace wp_kb_articles
 			 *
 			 * @var string Plugin product page URL.
 			 */
-			public $product_url = 'http://www.websharks-inc.com/product/wp-kb-articles/';
+			public $product_url = 'http://wpkbarticles.com';
 
 			/**
 			 * Used by the plugin's uninstall handler.
