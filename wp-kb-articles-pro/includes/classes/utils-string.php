@@ -970,6 +970,63 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Escapes registered WordPress® Shortcodes (i.e. `[[shortcode]]`).
+			 *
+			 * @param string $string A string value.
+			 *
+			 * @return string String with registered WordPress® Shortcodes escaped.
+			 */
+			public function esc_shortcodes($string)
+			{
+				return $this->esc_shortcodes_deep((string)$string);
+			}
+
+			/**
+			 * Escapes registered WordPress® Shortcodes (i.e. `[[shortcode]]`) deeply.
+			 *
+			 * @note This is a recursive scan running deeply into multiple dimensions of arrays/objects.
+			 * @note This routine will usually NOT include private, protected or static properties of an object class.
+			 *    However, private/protected properties *will* be included, if the current scope allows access to these private/protected properties.
+			 *    Static properties are NEVER considered by this routine, because static properties are NOT iterated by `foreach()`.
+			 *
+			 * @param mixed $value Any value can be converted into an escaped string.
+			 *    Actually, objects can't, but this recurses into objects.
+			 *
+			 * @return string|array|object Escaped string, array, object.
+			 */
+			public function esc_shortcodes_deep($value)
+			{
+				if(is_array($value) || is_object($value))
+				{
+					foreach($value as $_key => &$_value)
+						$_value = $this->esc_shortcodes_deep($_value);
+					unset($_key, $_value);
+
+					return $value;
+				}
+				if(empty($GLOBALS['shortcode_tags']) || !is_array($GLOBALS['shortcode_tags']))
+					return (string)$value; // Nothing to do.
+
+				return preg_replace_callback('/'.get_shortcode_regex().'/s', array($this, '_esc_shortcodes'), (string)$value);
+			}
+
+			/**
+			 * Callback handler for escaping WordPress® Shortcodes.
+			 *
+			 * @param array $m An array of regex matches.
+			 *
+			 * @return string Escaped Shortcode.
+			 */
+			protected function _esc_shortcodes($m)
+			{
+				if(isset($m[1], $m[6]) && $m[1] === '[' && $m[6] === ']')
+					return $m[0]; // Already escaped.
+
+				else // Escape by wrapping with `[` ... `]`.
+					return '['.$m[0].']';
+			}
+
+			/**
 			 * HTML whitespace. Keys are actually regex patterns here.
 			 *
 			 * @var array HTML whitespace. Keys are actually regex patterns here.
