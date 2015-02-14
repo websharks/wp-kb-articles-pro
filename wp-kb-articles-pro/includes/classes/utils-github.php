@@ -39,26 +39,29 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			public function enabled_configured()
 			{
+				if(!is_null($is = &$this->cache_key(__FUNCTION__)))
+					return $is; // Already cached this.
+
 				if(!$this->plugin->options['github_processing_enable'])
-					return FALSE; // Disabled currently.
+					return ($is = FALSE); // Disabled currently.
 
 				if(!$this->plugin->options['github_mirror_owner'])
-					return FALSE; // Not possible.
+					return ($is = FALSE); // Not possible.
 
 				if(!$this->plugin->options['github_mirror_repo'])
-					return FALSE; // Not possible.
+					return ($is = FALSE); // Not possible.
 
 				if(!$this->plugin->options['github_mirror_branch'])
-					return FALSE; // Not possible.
+					return ($is = FALSE); // Not possible.
 
 				if(!$this->plugin->options['github_mirror_api_key'])
 					if(!$this->plugin->options['github_mirror_username'] || !$this->plugin->options['github_mirror_password'])
-						return FALSE; // possible.
+						return ($is = FALSE); // possible.
 
 				if(!$this->plugin->options['github_mirror_author'])
-					return FALSE; // Not possible.
+					return ($is = FALSE); // Not possible.
 
-				return TRUE; // Enabled and configured properly.
+				return ($is = TRUE); // Enabled and configured properly.
 			}
 
 			/**
@@ -134,10 +137,44 @@ namespace wp_kb_articles // Root namespace.
 				if(!($post_id = (integer)$post_id))
 					return; // Not possible.
 
-				if(!($path = trim((string)$path)))
-					return; // Not possible.
+				$path = trim((string)$path); // Can be empty.
 
 				update_post_meta($post_id, __NAMESPACE__.'_github_path', $path);
+			}
+
+			/**
+			 * Gets content type for an article.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string Content type value.
+			 */
+			public function get_content_type($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				return trim((string)get_post_meta($post_id, __NAMESPACE__.'_github_content_type', TRUE));
+			}
+
+			/**
+			 * Updates content type for an article.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 * @param string  $content_type Content type value.
+			 */
+			public function update_content_type($post_id, $content_type)
+			{
+				if(!($post_id = (integer)$post_id))
+					return; // Not possible.
+
+				$content_type = trim((string)$content_type); // Can be empty.
+
+				update_post_meta($post_id, __NAMESPACE__.'_github_content_type', $content_type);
 			}
 
 			/**
@@ -170,8 +207,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!($post_id = (integer)$post_id))
 					return; // Not possible.
 
-				if(!($sha = trim((string)$sha)))
-					return; // Not possible.
+				$sha = trim((string)$sha); // Can be empty.
 
 				update_post_meta($post_id, __NAMESPACE__.'_github_sha', $sha);
 			}
@@ -212,15 +248,13 @@ namespace wp_kb_articles // Root namespace.
 				if(!($post_id = (integer)$post_id))
 					return; // Not possible.
 
-				if(!($issue = $this->plugin->utils_string->trim((string)$issue, '', '#')))
-					return; // Not possible; issue empty after trimming.
-
+				$issue     = $this->plugin->utils_string->trim((string)$issue, '', '#');
 				$issue_url = $issue; // Assume it is already a URL by default.
 
-				if(is_numeric($issue)) // e.g. `github-issue: [number]`.
+				if(isset($issue[0]) && is_numeric($issue)) // e.g. `github-issue: [number]`.
 					$issue_url = $this->repo_url().'/issues/'.urlencode($issue);
 
-				else if(preg_match('/^(?P<owner>[^\/]+)\/(?P<repo>[^\/]+)#(?P<issue>[1-9][0-9]*)$/', $issue, $_m))
+				else if($issue && preg_match('/^(?P<owner>[^\/]+)\/(?P<repo>[^\/]+)#(?P<issue>[1-9][0-9]*)$/', $issue, $_m))
 					// e.g. `github-issue: owner/repo#[number]`; as supported by all aspects of GitHub.
 					$issue_url = $this->base_url().'/'.urlencode($_m['owner']).'/'.urlencode($_m['repo']).'/issues/'.urlencode($_m['issue']);
 
@@ -257,8 +291,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!($post_id = (integer)$post_id))
 					return; // Not possible.
 
-				if(!strlen($toc_enable = trim((string)$toc_enable)))
-					return; // Not possible.
+				$toc_enable = trim((string)$toc_enable); // Can be empty.
 
 				update_post_meta($post_id, __NAMESPACE__.'_toc_enable', $toc_enable);
 			}
@@ -285,6 +318,145 @@ namespace wp_kb_articles // Root namespace.
 			public function base_url()
 			{
 				return 'https://github.com';
+			}
+
+			/**
+			 * Handle ezPHP exclusions.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param boolean  $exclude Excluded?
+			 * @param \WP_Post $post A WP Post object.
+			 *
+			 * @return boolean `TRUE` if post/article is excluded.
+			 */
+			public function maybe_exclude_from_ezphp($exclude, \WP_Post $post)
+			{
+				if($post->post_type === $this->plugin->post_type)
+					if($this->enabled_configured() || $this->get_content_type($post->ID))
+						return ($exclude = TRUE); // Disallow ezPHP in these cases.
+
+				return $exclude; // Exclude; pass through.
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param string $content The post/article content.
+			 *
+			 * @return string The post/article content.
+			 */
+			public function maybe_preserve_raw_html_content($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->plugin->post_type)
+					return $content; // Not applicable.
+
+				if($this->get_content_type($GLOBALS['post']->ID) !== 'text/html')
+					return $content; // Not applicable.
+
+				$token = '%%'.__NAMESPACE__.'_raw_html_'.$GLOBALS['post']->ID.'%%';
+
+				if(strpos($content, $token) !== FALSE)
+					return $content; // Already filtered this.
+
+				$raw_html = &$this->cache_key(__FUNCTION__, $GLOBALS['post']->ID);
+				$raw_html = (string)$content; // Preserve raw HTML content.
+
+				return $token; // Other filters will see the token only.
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param string $content The post/article content.
+			 *
+			 * @return string The post/article content.
+			 */
+			public function maybe_restore_raw_html_content($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->plugin->post_type)
+					return $content; // Not applicable.
+
+				if($this->get_content_type($GLOBALS['post']->ID) !== 'text/html')
+					return $content; // Not applicable.
+
+				$raw_html = &$this->cache_key('maybe_preserve_raw_html_content', $GLOBALS['post']->ID);
+				$raw_html = (string)$raw_html; // Force string value.
+
+				$content  = str_replace('%%'.__NAMESPACE__.'_raw_html_'.$GLOBALS['post']->ID.'%%', $raw_html, $content);
+				$raw_html = ''; // Empty this out now; just wasting memory otherwise.
+
+				return $content; // Content w/ raw HTML preserved.
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `get_the_excerpt` and `the_excerpt` filters.
+			 *
+			 * @param string $excerpt The post/article excerpt.
+			 *
+			 * @return string The post/article excerpt.
+			 */
+			public function maybe_preserve_raw_html_excerpt($excerpt)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->plugin->post_type)
+					return $excerpt; // Not applicable.
+
+				if($this->get_content_type($GLOBALS['post']->ID) !== 'text/html')
+					return $excerpt; // Not applicable.
+
+				$token = '%%'.__NAMESPACE__.'_raw_html_'.$GLOBALS['post']->ID.'%%';
+
+				if(strpos($excerpt, $token) !== FALSE)
+					return $excerpt; // Already filtered this.
+
+				$raw_html = &$this->cache_key(__FUNCTION__, $GLOBALS['post']->ID);
+				$raw_html = (string)$excerpt; // Preserve raw HTML content.
+
+				if(!$raw_html && !has_excerpt()) // No excerpt?
+				{
+					$content        = get_the_content('');
+					$excerpt        = apply_filters('the_content', $content);
+					$excerpt        = str_replace(']]>', ']]&gt;', $excerpt);
+					$excerpt_length = apply_filters('excerpt_length', 55);
+					$excerpt_more   = apply_filters('excerpt_more', ' '.'[&hellip;]');
+					$excerpt        = wp_trim_words($excerpt, $excerpt_length, $excerpt_more);
+					$raw_html       = $excerpt = apply_filters('wp_trim_excerpt', $excerpt, '');
+				}
+				return $token; // Other filters will see the token only.
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param string $excerpt The post/article excerpt.
+			 *
+			 * @return string The post/article excerpt.
+			 */
+			public function maybe_restore_raw_html_excerpt($excerpt)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->plugin->post_type)
+					return $excerpt; // Not applicable.
+
+				if($this->get_content_type($GLOBALS['post']->ID) !== 'text/html')
+					return $excerpt; // Not applicable.
+
+				$raw_html = &$this->cache_key('maybe_preserve_raw_html_excerpt', $GLOBALS['post']->ID);
+				$raw_html = (string)$raw_html; // Force string value.
+
+				$excerpt  = str_replace('%%'.__NAMESPACE__.'_raw_html_'.$GLOBALS['post']->ID.'%%', $raw_html, $excerpt);
+				$raw_html = ''; // Empty this out now; just wasting memory otherwise.
+
+				return $excerpt; // Excerpt w/ raw HTML preserved successfully.
 			}
 		}
 	}

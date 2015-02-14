@@ -48,6 +48,24 @@ namespace wp_kb_articles // Root namespace.
 			protected $path;
 
 			/**
+			 * File extension.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @var string File extension.
+			 */
+			protected $extension;
+
+			/**
+			 * File content type; after body filters.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @var string File content type; after body filters.
+			 */
+			protected $content_type;
+
+			/**
 			 * SHA1 hash.
 			 *
 			 * @since 150113 First documented version.
@@ -257,6 +275,13 @@ namespace wp_kb_articles // Root namespace.
 				if(!($this->path = trim((string)$this->args['path'])))
 					throw new \exception(__('Missing path.', $this->plugin->text_domain));
 
+				if(!($this->extension = $this->plugin->utils_fs->extension($this->path)))
+					throw new \exception(__('Missing extension.', $this->plugin->text_domain));
+
+				if($this->extension === 'md') $this->content_type = 'text/markdown';
+				else if($this->extension === 'html') $this->content_type = 'text/html';
+				else throw new \exception(__('Unexpected content type.', $this->plugin->text_domain));
+
 				if(!($this->sha = trim((string)$this->args['sha'])))
 					throw new \exception(__('Missing sha.', $this->plugin->text_domain));
 
@@ -408,9 +433,10 @@ namespace wp_kb_articles // Root namespace.
 				$this->maybe_update_terms(); // Updates terms; i.e. categories/tags.
 
 				$this->plugin->utils_github->update_path($this->post->ID, $this->path);
+				$this->plugin->utils_github->update_content_type($this->post->ID, $this->content_type);
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
 
-				if($this->issue) // Only if used by this site.
+				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
 				if(isset($this->toc_enable[0])) // Only if specified.
@@ -453,9 +479,10 @@ namespace wp_kb_articles // Root namespace.
 				$this->maybe_update_terms(); // Updates terms; i.e. categories/tags.
 
 				$this->plugin->utils_github->update_path($this->post->ID, $this->path);
+				$this->plugin->utils_github->update_content_type($this->post->ID, $this->content_type);
 				$this->plugin->utils_github->update_sha($this->post->ID, $this->sha);
 
-				if($this->issue) // Only if used by this site.
+				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
 				if(isset($this->toc_enable[0])) // Only if specified.
@@ -492,9 +519,11 @@ namespace wp_kb_articles // Root namespace.
 				if(!$this->body) // Do we have a body?
 					return; // Nothing to do here.
 
-				if($this->plugin->options['github_markdown_parse_enable'])
-					if($this->plugin->utils_fs->extension($this->path) === 'md')
-						$this->body = $this->plugin->utils_string->markdown($this->body);
+				if($this->plugin->options['github_markdown_parse_enable'] && $this->content_type === 'text/markdown')
+				{
+					$this->body         = $this->plugin->utils_string->markdown($this->body, array('oembed' => TRUE));
+					$this->content_type = 'text/html'; // Raw HTML in this case.
+				}
 			}
 		}
 	}
