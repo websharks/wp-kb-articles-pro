@@ -61,10 +61,42 @@ namespace wp_kb_articles // Root namespace.
 
 				$toc = $tocify['toc_markup']; // For template.
 
-				$template_vars = get_defined_vars();
-				$template      = new template('site/articles/toc.php');
+				$template_vars   = get_defined_vars();
+				$template        = new template('site/articles/toc.php');
+				$template_output = $template->parse($template_vars);
 
-				return $template->parse($template_vars).$tocify['markup'];
+				$_this = $this; // Reference needed by closure.
+
+				$embeds_regex_quick_check = // Quick test only.
+
+					'/^'. // Beginning of line.
+					'\s*'. // Leading whitespace.
+					'(?:\<p\>\s*)?'. // Opening <p> tag?
+					'\<(?:iframe|embed|object|video)'. // Embed tag.
+					'[\s\/>]/i'; // Confirmation it's an embed tag.
+
+				$embeds_regex = // e.g. <p><iframe></iframe></p>
+					// e.g. <iframe/><video /><object></object><embed></embed>
+					// e.g. <p><iframe/><video /><embed></embed></p>
+
+					'/^'. // Beginning of line.
+					'(?:'. // Recursive group.
+					'\s*'. // Leading whitespace.
+					'(?:\<p\>\s*)?'. // Opening <p> tag?
+					'\<(iframe|embed|object|video)'. // Embed tag.
+					'(?:\/\s*\>|\s[^\/>]*\/\s*\>|[\s>].*?\<\/\\1\>)'. // Closing embed tag.
+					'(?:\s*\<\/p\>)?'. // Closing </p> tag?
+					'\s*'. // Trailing whitespace.
+					')+/is'; // One or more.
+
+				if(preg_match($embeds_regex_quick_check, $tocify['markup']))
+					return preg_replace_callback($embeds_regex, function ($m) use ($_this, $template_output)
+					{
+						return $m[0]."\n".$template_output."\n"; // After embeds.
+
+					}, $tocify['markup']);
+
+				return $template_output.$tocify['markup'];
 			}
 
 			/**
@@ -170,7 +202,8 @@ namespace wp_kb_articles // Root namespace.
 
 					$output['toc_markup'] .=  // List item.
 						'<li>'. // This is left open in case of children.
-						'<a href="'.esc_attr('#toc-'.$_heading['crc32b']).'" title="'.esc_attr($_heading['heading']).'" data-toggle="tooltip">'.
+						'<a href="'.esc_attr('#toc-'.$_heading['crc32b']).'" title="'.esc_attr($_heading['heading']).'"'.
+						' data-toggle="tooltip" data-delay=\'{"show":1000,"hide":0}\'>'.
 						esc_html($_heading['heading']).
 						'</a>';
 					$_prev_heading = &$_heading; // Reference previous.
