@@ -170,7 +170,7 @@ namespace wp_kb_articles // Root namespace.
 
 					$output['toc_markup'] .=  // List item.
 						'<li>'. // This is left open in case of children.
-						'<a href="'.esc_attr('#toc-'.$_heading['crc32b']).'" title="'.esc_attr($_heading['heading']).'">'.
+						'<a href="'.esc_attr('#toc-'.$_heading['crc32b']).'" title="'.esc_attr($_heading['heading']).'" data-toggle="tooltip">'.
 						esc_html($_heading['heading']).
 						'</a>';
 					$_prev_heading = &$_heading; // Reference previous.

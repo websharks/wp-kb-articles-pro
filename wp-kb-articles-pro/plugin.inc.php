@@ -150,7 +150,7 @@ namespace wp_kb_articles
 			 *
 			 * @var string Site name.
 			 */
-			public $site_name = 'websharks-inc.com';
+			public $site_name = 'WPKBArticles.com';
 
 			/**
 			 * Plugin product page URL.
@@ -159,7 +159,7 @@ namespace wp_kb_articles
 			 *
 			 * @var string Plugin product page URL.
 			 */
-			public $product_url = 'http://www.websharks-inc.com/product/wp-kb-articles/';
+			public $product_url = 'http://wpkbarticles.com';
 
 			/**
 			 * Used by the plugin's uninstall handler.
@@ -480,6 +480,8 @@ namespace wp_kb_articles
 				/*
 				 * Setup all secondary plugin hooks.
 				 */
+				$_this = $this; // Referenced needed by closures.
+
 				add_action('init', array($this, 'register_post_type'), -11, 0);
 				add_action('init', array($this, 'register_rewrite_rules'), -11, 0);
 				add_action('init', array($this, 'actions'), -10, 0);
@@ -498,12 +500,25 @@ namespace wp_kb_articles
 				add_action('wp_print_styles', array($this, 'enqueue_front_styles'), 10, 0);
 
 				add_action('save_post_'.$this->post_type, array($this, 'save_article'), 10, 1);
+
+				add_filter('ezphp_exclude_post', array($this, 'maybe_exclude_article_from_ezphp'), 10, 2);
+
+				add_filter('the_content', array($this, 'maybe_preserve_article_raw_html_content'), -PHP_INT_MAX, 1);
+				add_filter('the_content', array($this, 'maybe_restore_article_raw_html_content'), PHP_INT_MAX - 1, 1);
+
+				add_filter('get_the_excerpt', array($this, 'maybe_preserve_article_raw_html_excerpt'), -PHP_INT_MAX, 1);
+				add_filter('get_the_excerpt', array($this, 'maybe_restore_article_raw_html_excerpt'), PHP_INT_MAX - 1, 1);
+
+				add_filter('the_excerpt', array($this, 'maybe_preserve_article_raw_html_excerpt'), -PHP_INT_MAX, 1);
+				add_filter('the_excerpt', array($this, 'maybe_restore_article_raw_html_excerpt'), PHP_INT_MAX - 1, 1);
+
 				add_filter('the_content', array($this, 'article_toc'), PHP_INT_MAX, 1);
 				add_filter('the_content', array($this, 'article_footer'), PHP_INT_MAX, 1);
 
-				add_shortcode('kb_articles_list', array($this, 'sc_list'));
 				add_filter('author_link', array($this, 'sc_author_link'), 10, 3);
 				add_filter('term_link', array($this, 'sc_term_link'), 10, 3);
+
+				add_shortcode('kb_articles_list', array($this, 'sc_list'));
 				/*
 				 * Setup CRON-related hooks.
 				 */
@@ -1209,6 +1224,102 @@ namespace wp_kb_articles
 			public function save_article($post_id)
 			{
 				$this->utils_post->update_popularity($post_id, 0);
+			}
+
+			/**
+			 * Handle ezPHP exclusions.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `ezphp_exclude_post` filter.
+			 *
+			 * @param boolean  $exclude Excluded?
+			 * @param \WP_Post $post A WP Post object.
+			 *
+			 * @return boolean `TRUE` if post/article is excluded.
+			 */
+			public function maybe_exclude_article_from_ezphp($exclude, \WP_Post $post)
+			{
+				if($post->post_type !== $this->post_type)
+					return $exclude; // Not applicable.
+
+				return $this->utils_github->maybe_exclude_from_ezphp($exclude, $post);
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `the_content` filter.
+			 *
+			 * @param string $content The post/article content.
+			 *
+			 * @return string The post/article content.
+			 */
+			public function maybe_preserve_article_raw_html_content($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $content; // Not applicable.
+
+				return $this->utils_github->maybe_preserve_raw_html_content($content);
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `the_content` filter.
+			 *
+			 * @param string $content The post/article content.
+			 *
+			 * @return string The post/article content.
+			 */
+			public function maybe_restore_article_raw_html_content($content)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $content; // Not applicable.
+
+				return $this->utils_github->maybe_restore_raw_html_content($content);
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `get_the_excerpt` and `the_excerpt` filters.
+			 *
+			 * @param string $excerpt The post/article excerpt.
+			 *
+			 * @return string The post/article excerpt.
+			 */
+			public function maybe_preserve_article_raw_html_excerpt($excerpt)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $excerpt; // Not applicable.
+
+				return $this->utils_github->maybe_preserve_raw_html_excerpt($excerpt);
+			}
+
+			/**
+			 * Handle raw HTML content type.
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @attaches-to `get_the_excerpt` and `the_excerpt` filters.
+			 *
+			 * @param string $excerpt The post/article excerpt.
+			 *
+			 * @return string The post/article excerpt.
+			 */
+			public function maybe_restore_article_raw_html_excerpt($excerpt)
+			{
+				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
+					return $excerpt; // Not applicable.
+
+				return $this->utils_github->maybe_restore_raw_html_excerpt($excerpt);
 			}
 
 			/**
