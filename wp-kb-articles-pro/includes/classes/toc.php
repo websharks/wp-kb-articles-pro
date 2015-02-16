@@ -89,6 +89,20 @@ namespace wp_kb_articles // Root namespace.
 					'\s*'. // Trailing whitespace.
 					')+/is'; // One or more.
 
+				if(stripos($tocify['markup'], '%%toc%%') !== FALSE)
+				{
+					$_tokenize_only = array('shortcodes', 'pre', 'code', 'samp');
+					$_spcsm         = $this->plugin->utils_string->spcsm_tokens($tocify['markup'], $_tokenize_only);
+
+					if(stripos($_spcsm['string'], '%%toc%%') !== FALSE)
+					{
+						$_spcsm['string'] = str_ireplace('%%toc%%', $template_output, $_spcsm['string']);
+						$tocify['markup'] = $this->plugin->utils_string->spcsm_restore($_spcsm);
+
+						return $tocify['markup']; // With `%%toc%%` now.
+					}
+					unset($_tokenize_only, $_spcsm); // Housekeeping.
+				}
 				if(preg_match($embeds_regex_quick_check, $tocify['markup']))
 					return preg_replace_callback($embeds_regex, function ($m) use ($_this, $template_output)
 					{
