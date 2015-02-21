@@ -387,74 +387,79 @@ namespace wp_kb_articles
 				$this->default_options = array(
 					/* Core/systematic option keys. */
 
-					'version'                                                       => $this->version,
-					'crons_setup'                                                   => '0', // `0` or timestamp.
+					'version'                                                          => $this->version,
+					'crons_setup'                                                      => '0', // `0` or timestamp.
 
 					/* Related to data safeguards. */
 
-					'uninstall_safeguards_enable'                                   => '1', // `0|1`; safeguards on?
+					'uninstall_safeguards_enable'                                      => '1', // `0|1`; safeguards on?
 
 					/* Related to GitHub integration. */
 
-					'github_processing_enable'                                      => '0', // `0|1`; enable?
+					'github_processing_enable'                                         => '0', // `0|1`; enable?
 
-					'github_mirror_owner'                                           => '', // Repo owner.
-					'github_mirror_repo'                                            => '', // Repo owner.
-					'github_mirror_branch'                                          => '', // Branch.
-					'github_mirror_username'                                        => '', // Username.
-					'github_mirror_password'                                        => '', // Password.
-					'github_mirror_api_key'                                         => '', // API key.
-					'github_mirror_author'                                          => '', // User login|ID.
+					'github_mirror_owner'                                              => '', // Repo owner.
+					'github_mirror_repo'                                               => '', // Repo owner.
+					'github_mirror_branch'                                             => '', // Branch.
+					'github_mirror_username'                                           => '', // Username.
+					'github_mirror_password'                                           => '', // Password.
+					'github_mirror_api_key'                                            => '', // API key.
+					'github_mirror_author'                                             => '', // User login|ID.
 
-					'github_issue_feedback_enable'                                  => '1', // `0|1`; enable?
-					'github_markdown_parse_enable'                                  => '1', // `0|1`; enable?
-					'github_readonly_content_enable'                                => '1', // `0|1`; enable?
+					'github_issue_feedback_enable'                                     => '1', // `0|1`; enable?
+					'github_markdown_parse_enable'                                     => '1', // `0|1`; enable?
+					'github_readonly_content_enable'                                   => '1', // `0|1`; enable?
 
-					'github_processor_max_time'                                     => '30', // In seconds.
-					'github_processor_delay'                                        => '250', // In milliseconds.
-					'github_processor_max_limit'                                    => '100', // Total files.
-					'github_processor_realtime_max_limit'                           => '5', // Total files.
+					'github_processor_max_time'                                        => '30', // In seconds.
+					'github_processor_delay'                                           => '250', // In milliseconds.
+					'github_processor_max_limit'                                       => '100', // Total files.
+					'github_processor_realtime_max_limit'                              => '5', // Total files.
 
 					/* Related to TOC generation. */
 
-					'toc_generation_enable'                                         => '1', // `0|1`; enable?
+					'toc_generation_enable'                                            => '1', // `0|1`; enable?
 
 					/* Related to IP tracking. */
 
-					'prioritize_remote_addr'                                        => '0', // `0|1`; enable?
-					'geo_location_tracking_enable'                                  => '0', // `0|1`; enable?
+					'prioritize_remote_addr'                                           => '0', // `0|1`; enable?
+					'geo_location_tracking_enable'                                     => '0', // `0|1`; enable?
 
 					/* Related to menu pages; i.e. logo display. */
 
-					'menu_pages_logo_icon_enable'                                   => '0', // `0|1`; display?
+					'menu_pages_logo_icon_enable'                                      => '0', // `0|1`; display?
 
 					/* Article index-related options. */
 
-					'sc_articles_list_index_post_id'                                => '',
+					'sc_articles_list_index_post_id'                                   => '',
 
 					/* Template-related config. options. */
 
-					'template_type'                                                 => 's', // `a|s`.
+					'template_type'                                                    => 's', // `a|s`.
 
 					# Advanced HTML, PHP-based templates for the site.
 
-					'template__type_a__site__articles__list___php'                  => '', // HTML/PHP code.
-					'template__type_a__site__articles__list___js___php'             => '', // HTML/PHP code.
-					'template__type_a__site__articles__list___css'                  => '', // CSS code.
+					'template__type_a__site__articles__list_search_box___php'          => '', // HTML/PHP code.
+					'template__type_a__site__articles__list_search_box___js___php'     => '', // HTML/PHP code.
+					'template__type_a__site__articles__list_search_box___css'          => '', // CSS code.
 
-					'template__type_a__site__articles__toc___php'                   => '', // HTML/PHP code.
-					'template__type_a__site__articles__toc___js___php'              => '', // HTML/PHP code.
-					'template__type_a__site__articles__toc___css'                   => '', // CSS code.
+					'template__type_a__site__articles__list___php'                     => '', // HTML/PHP code.
+					'template__type_a__site__articles__list___js___php'                => '', // HTML/PHP code.
+					'template__type_a__site__articles__list___css'                     => '', // CSS code.
 
-					'template__type_a__site__articles__footer___php'                => '', // HTML/PHP code.
-					'template__type_a__site__articles__footer___js___php'           => '', // HTML/PHP code.
-					'template__type_a__site__articles__footer___css'                => '', // CSS code.
+					'template__type_a__site__articles__toc___php'                      => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___js___php'                 => '', // HTML/PHP code.
+					'template__type_a__site__articles__toc___css'                      => '', // CSS code.
+
+					'template__type_a__site__articles__footer___php'                   => '', // HTML/PHP code.
+					'template__type_a__site__articles__footer___js___php'              => '', // HTML/PHP code.
+					'template__type_a__site__articles__footer___css'                   => '', // CSS code.
 
 					# Simple snippet-based templates for the site.
 
-					'template__type_s__site__articles__snippet__list_article___php' => '', // HTML code.
-					'template__type_s__site__articles__snippet__toc___php'          => '', // HTML code.
-					'template__type_s__site__articles__snippet__footer___php'       => '', // HTML code.
+					'template__type_s__site__articles__snippet__list_search_box___php' => '', // HTML code.
+					'template__type_s__site__articles__snippet__list_article___php'    => '', // HTML code.
+					'template__type_s__site__articles__snippet__toc___php'             => '', // HTML code.
+					'template__type_s__site__articles__snippet__footer___php'          => '', // HTML code.
 
 				); // Default options are merged with those defined by the site owner.
 				$this->default_options = apply_filters(__METHOD__.'__default_options', $this->default_options); // Allow filters.
@@ -518,6 +523,7 @@ namespace wp_kb_articles
 				add_filter('author_link', array($this, 'sc_author_link'), 10, 3);
 				add_filter('term_link', array($this, 'sc_term_link'), 10, 3);
 
+				add_shortcode('kb_articles_list_search_box', array($this, 'sc_list_search_box'));
 				add_shortcode('kb_articles_list', array($this, 'sc_list'));
 				/*
 				 * Setup CRON-related hooks.
@@ -713,7 +719,7 @@ namespace wp_kb_articles
 					wp_enqueue_style('codemirror-fullscreen', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/addon/display/fullscreen.min.css'), array('codemirror'), NULL, 'all');
 					wp_enqueue_style('codemirror-ambiance-theme', set_url_scheme('//cdnjs.cloudflare.com/ajax/libs/codemirror/4.7.0/theme/ambiance.min.css'), array('codemirror'), NULL, 'all');
 
-					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
 					wp_enqueue_style('sharkicons', $this->utils_url->to('/submodules/sharkicons/styles.min.css'), array(), NULL, 'all');
 
 					wp_enqueue_style(__NAMESPACE__, $this->utils_url->to('/client-s/css/menu-pages.min.css'), $deps, $this->version, 'all');
@@ -724,7 +730,7 @@ namespace wp_kb_articles
 				{
 					$deps = array('font-awesome', 'sharkicons'); // Dependencies.
 
-					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+					wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
 					wp_enqueue_style('sharkicons', $this->utils_url->to('/submodules/sharkicons/styles.min.css'), array(), NULL, 'all');
 
 					wp_enqueue_style(__NAMESPACE__.'-edit', $this->utils_url->to('/client-s/css/post-type-edit.min.css'), $deps, $this->version, 'all');
@@ -1367,6 +1373,23 @@ namespace wp_kb_articles
 			/*
 			 * Shortcode-Related Methods
 			 */
+
+			/**
+			 * Parses shortcode for list search box.
+			 *
+			 * @since 150220 Improving search box.
+			 *
+			 * @param array|string $attr Shortcode attributes.
+			 * @param string       $content Shortcode content.
+			 *
+			 * @return string Parsed shortcode; i.e. HTML markup.
+			 */
+			public function sc_list_search_box($attr, $content = '')
+			{
+				$sc_list = new sc_list_search_box((array)$attr, $content);
+
+				return $sc_list->parse(); // Parse shortcode.
+			}
 
 			/**
 			 * Parses shortcode for articles list.

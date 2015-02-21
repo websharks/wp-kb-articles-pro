@@ -32,9 +32,31 @@ namespace wp_kb_articles // Root namespace.
 				if(is_admin())
 					return; // Not applicable.
 
+				$this->maybe_enqueue_list_search_box_styles();
 				$this->maybe_enqueue_list_styles();
 				$this->maybe_enqueue_toc_styles();
 				$this->maybe_enqueue_footer_styles();
+			}
+
+			/**
+			 * Enqueue front-side styles for list search box.
+			 *
+			 * @since 150220 Enhancing search box.
+			 */
+			protected function maybe_enqueue_list_search_box_styles()
+			{
+				if(empty($GLOBALS['post']) || !is_singular())
+					return; // Not a post/page.
+
+				if(stripos($GLOBALS['post']->post_content, '[kb_articles_list_search_box') === FALSE)
+					return; // Current singular post/page does not contain the shortcode.
+
+				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
+
+				echo '<style type="text/css">'."\n";
+				$template = new template('site/articles/list-search-box.css');
+				echo $template->parse()."\n";
+				echo '</style>';
 			}
 
 			/**
@@ -50,7 +72,7 @@ namespace wp_kb_articles // Root namespace.
 				if(stripos($GLOBALS['post']->post_content, '[kb_articles_list') === FALSE)
 					return; // Current singular post/page does not contain the shortcode.
 
-				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
 
 				echo '<style type="text/css">'."\n";
 				$template = new template('site/articles/list.css');
@@ -68,7 +90,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!is_singular($this->plugin->post_type))
 					return; // Not a post/page.
 
-				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
 
 				echo '<style type="text/css">'."\n";
 				$template = new template('site/articles/toc.css');
@@ -86,7 +108,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!is_singular($this->plugin->post_type))
 					return; // Not a post/page.
 
-				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css'), array(), NULL, 'all');
+				wp_enqueue_style('font-awesome', set_url_scheme('//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'), array(), NULL, 'all');
 
 				echo '<style type="text/css">'."\n";
 				$template = new template('site/articles/footer.css');
