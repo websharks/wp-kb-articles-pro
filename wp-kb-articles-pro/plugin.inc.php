@@ -489,6 +489,7 @@ namespace wp_kb_articles
 
 				add_action('init', array($this, 'register_post_type'), -11, 0);
 				add_action('init', array($this, 'register_rewrite_rules'), -11, 0);
+				add_action('init', array($this, 'article_github_issue_redirect'), -10, 0);
 				add_action('init', array($this, 'actions'), -10, 0);
 
 				add_action('admin_init', array($this, 'check_version'), 10, 0);
@@ -1368,6 +1369,21 @@ namespace wp_kb_articles
 				$footer = new footer(); // Footer class instance.
 
 				return $footer->filter($content); // With footer.
+			}
+
+			/**
+			 * Handle article issue redirects.
+			 *
+			 * @since 150225 Adding support for issue link references.
+			 *
+			 * @attaches-to `init` action hook.
+			 */
+			public function article_github_issue_redirect()
+			{
+				if(empty($_REQUEST[$this->qv_prefix.'github_issue_r']))
+					return; // Not applicable.
+
+				$this->utils_github->issue_redirect();
 			}
 
 			/*

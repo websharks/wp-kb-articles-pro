@@ -262,6 +262,33 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Gets article post ID based on issue number.
+			 *
+			 * @since 150225 Adding support for issue link references.
+			 *
+			 * @param integer $issue Issue number.
+			 *
+			 * @return integer Post ID.
+			 */
+			public function issue_post_id($issue)
+			{
+				if(!($issue = (integer)$issue))
+					return 0; // Not possible.
+
+				$issue_url = $this->repo_url().'/issues/'.urlencode($issue);
+
+				$sql = "SELECT `".esc_sql($this->plugin->utils_db->wp->postmeta)."`.`post_id`".
+				       " FROM `".esc_sql($this->plugin->utils_db->wp->postmeta)."`, `".esc_sql($this->plugin->utils_db->wp->posts)."`".
+				       " WHERE `".esc_sql($this->plugin->utils_db->wp->postmeta)."`.`post_id` = `".esc_sql($this->plugin->utils_db->wp->posts)."`.`ID`".
+
+				       " AND `".esc_sql($this->plugin->utils_db->wp->postmeta)."`.`meta_key` = '".esc_sql(__NAMESPACE__.'_github_issue_url')."'".
+				       " AND `".esc_sql($this->plugin->utils_db->wp->postmeta)."`.`meta_value` = '".esc_sql($issue_url)."'".
+				       " AND `".esc_sql($this->plugin->utils_db->wp->posts)."`.`post_status` = 'publish' LIMIT 1";
+
+				return (integer)$this->utils_db->wp->get_var($sql);
+			}
+
+			/**
 			 * Gets TOC-enable value for an article.
 			 *
 			 * @since 150118 Adding TOC generation.
@@ -318,6 +345,59 @@ namespace wp_kb_articles // Root namespace.
 			public function base_url()
 			{
 				return 'https://github.com';
+			}
+
+			/**
+			 * Issue reference redirections.
+			 *
+			 * @since 150225 Adding support for issue link references.
+			 */
+			public function issue_redirect()
+			{
+				if(empty($_REQUEST[$this->plugin->qv_prefix.'github_issue_r']))
+					return; // Not applicable.
+
+				if(!($issue = (integer)$_REQUEST[$this->plugin->qv_prefix.'github_issue_r']))
+					return; // Not applicable.
+
+				if(!$this->enabled_configured()) return; // Not applicable.
+
+				if(($post_id = $this->issue_post_id($issue)) && ($permalink = get_permalink($post_id)))
+					wp_redirect($permalink, 301).exit(); // Article matching this issue number.
+
+				wp_redirect($this->repo_url().'/issues/'.urlencode($issue)).exit();
+			}
+
+			/**
+			 * Filter issue references.
+			 *
+			 * @since 150225 Adding support for issue link references.
+			 *
+			 * @param string $body The body of a GitHub markdown/HTML file.
+			 *
+			 * @return string Filtered body of a GitHub markdown/HTML file.
+			 */
+			public function issue_redirect_filter($body)
+			{
+				if(!($body = trim((string)$body)))
+					return $body; // Nothing to do.
+
+				$_this = $this; // Needed by closures below.
+				$spcsm = $this->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
+
+				$spcsm['string'] = preg_replace_callback('/\]\('.preg_quote($this->repo_url(), '/').'\/issues\/(?P<issue>[1-9][0-9]*).*?\)/i', function ($m) use ($_this)
+				{
+					return ']('.add_query_arg($_this->plugin->qv_prefix.'github_issue_r', urlencode($m['issue']), home_url('/', 'http')).')'; #
+
+				}, $spcsm['string']); // Filters links in Markdown syntax.
+
+				$spcsm['string'] = preg_replace_callback('/\shref\s*\=\s*([\'"])'.preg_quote($this->repo_url(), '/').'\/issues\/(?P<issue>[1-9][0-9]*).*?\\1/i', function ($m) use ($_this)
+				{
+					return ' href='.$m[1].add_query_arg($_this->plugin->qv_prefix.'github_issue_r', urlencode($m['issue']), home_url('/', 'http')).$m[1]; #
+
+				}, $spcsm['string']); // Filters links in HTML anchor tags also.
+
+				return ($body = $this->utils_string->spcsm_restore($spcsm));
 			}
 
 			/**
