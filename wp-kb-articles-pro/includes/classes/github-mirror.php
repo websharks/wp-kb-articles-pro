@@ -519,6 +519,8 @@ namespace wp_kb_articles // Root namespace.
 				if(!$this->body) // Do we have a body?
 					return; // Nothing to do here.
 
+				$this->body = $this->plugin->utils_github->issue_redirect_filter($this->body);
+
 				if($this->plugin->options['github_markdown_parse_enable'] && $this->content_type === 'text/markdown')
 				{
 					$this->body         = $this->plugin->utils_string->markdown($this->body, array('oembed' => TRUE));
