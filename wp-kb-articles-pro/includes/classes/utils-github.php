@@ -285,7 +285,7 @@ namespace wp_kb_articles // Root namespace.
 				       " AND `".esc_sql($this->plugin->utils_db->wp->postmeta)."`.`meta_value` = '".esc_sql($issue_url)."'".
 				       " AND `".esc_sql($this->plugin->utils_db->wp->posts)."`.`post_status` = 'publish' LIMIT 1";
 
-				return (integer)$this->utils_db->wp->get_var($sql);
+				return (integer)$this->plugin->utils_db->wp->get_var($sql);
 			}
 
 			/**
@@ -383,7 +383,7 @@ namespace wp_kb_articles // Root namespace.
 					return $body; // Nothing to do.
 
 				$_this = $this; // Needed by closures below.
-				$spcsm = $this->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
+				$spcsm = $this->plugin->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
 
 				$spcsm['string'] = preg_replace_callback('/\]\('.preg_quote($this->repo_url(), '/').'\/issues\/(?P<issue>[1-9][0-9]*).*?\)/i', function ($m) use ($_this)
 				{
@@ -397,7 +397,7 @@ namespace wp_kb_articles // Root namespace.
 
 				}, $spcsm['string']); // Filters links in HTML anchor tags also.
 
-				return ($body = $this->utils_string->spcsm_restore($spcsm));
+				return ($body = $this->plugin->utils_string->spcsm_restore($spcsm));
 			}
 
 			/**
