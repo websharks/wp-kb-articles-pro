@@ -401,6 +401,112 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Media library upload handler.
+			 *
+			 * @since 150227 Adding support for media library storage.
+			 *
+			 * @param string $body The body of a GitHub markdown/HTML file.
+			 *
+			 * @return string Filtered body of a GitHub markdown/HTML file.
+			 */
+			public function media_library_filter($body)
+			{
+				if(!($body = trim((string)$body)))
+					return $body; // Nothing to do.
+
+				if(!($uploads = wp_upload_dir()) || !empty($uploads['error']))
+					return $body; // Not possible.
+
+				$_this        = $this; // Needed by closures below.
+				$uploads_host = parse_url($uploads['url'], PHP_URL_HOST); // Host name associated with media library.
+				$spcsm        = $this->plugin->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
+
+				require_once ABSPATH.'wp-admin/includes/image.php'; // Required for `wp_generate_attachment_metadata()`.
+
+				$callback_helper = function ($m, $prefix, $suffix) use ($_this, $uploads, $uploads_host)
+				{
+					$guid = sha1($m['url']); // Unique ID for this URL.
+
+					if(!($url = parse_url($m['url'])))
+						return $m[0]; // Not possible.
+
+					if(empty($url['host']) || empty($url['path']))
+						return $m[0]; // Not possible.
+
+					if(strcasecmp($uploads_host, $url['host']) === 0)
+						return $m[0]; // Not applicable.
+
+					if(strcasecmp($_SERVER['HTTP_HOST'], $url['host']) === 0)
+						return $m[0]; // Not applicable.
+
+					if(!($path = wp_check_filetype(basename($url['path']))))
+						return $m[0]; // Not possible.
+
+					if(empty($path['ext']) || empty($path['type']))
+						return $m[0]; // Not possible.
+
+					if(!in_array(strtolower($path['ext']), array('png', 'jpg', 'jpeg', 'gif'), TRUE))
+						return $m[0]; // Not applicable.
+
+					$sql = "SELECT `ID` FROM `".esc_sql($_this->plugin->utils_db->wp->posts)."`".
+					       " WHERE `guid` = '".esc_sql($guid)."' AND `post_type` = 'attachment' LIMIT 1";
+					if(($attachment_id = (integer)$_this->plugin->utils_db->wp->get_var($sql))) // Exists?
+					{
+						if(($src = wp_get_attachment_image_src($attachment_id, 'full')))
+							return $prefix.$src[0].$suffix; // Attachment src URL.
+						return $m[0]; // Not possible.
+					}
+					if(!is_writable($uploads['path']))
+						return $m[0]; // Not possible.
+
+					if(!($remote = wp_remote_get($m['url'])))
+						return $m[0]; // Not possible.
+
+					if(!($remote_response = wp_remote_retrieve_body($remote)))
+						return $m[0]; // Not possible.
+
+					$file = $uploads['path'].'/'.$guid.'.'.$path['ext'];
+					if(!file_put_contents($file, $remote_response))
+						return $m[0]; // Not possible.
+
+					if(stripos(finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file), 'image/') !== 0)
+					{
+						unlink($file); // Did not retrieve expected data type.
+						return $m[0]; // Not possible in this case.
+					}
+					$attachment = array(
+						'guid'           => $guid,
+						'file'           => $file,
+						'post_mime_type' => $path['type'],
+						'post_title'     => preg_replace('/\.[^.]+$/', '', basename($url['path'])),
+					);
+					if(!($attachment_id = (integer)wp_insert_attachment($attachment)))
+						return $m[0]; // Not possible.
+
+					if(!($src = wp_get_attachment_image_src($attachment_id, 'full')))
+						return $m[0]; // Not possible.
+
+					$attachment_meta = wp_generate_attachment_metadata($attachment_id, $file);
+					wp_update_attachment_metadata($attachment_id, $attachment_meta);
+
+					return $prefix.$src[0].$suffix; // Attachment src URL.
+				};
+				$spcsm['string'] = preg_replace_callback('/\]\((?P<url>https?\:\/\/.+?)\)/i', function ($m) use ($callback_helper)
+				{
+					return $callback_helper($m, '](', ')'); // Use callback helper.
+
+				}, $spcsm['string']); // Filters links in Markdown syntax.
+
+				$spcsm['string'] = preg_replace_callback('/\ssrc\s*\=\s*([\'"])(?P<url>https?\:\/\/.+?)\\1/i', function ($m) use ($callback_helper)
+				{
+					return $callback_helper($m, ' src='.$m[1], $m[1]); // Use callback helper.
+
+				}, $spcsm['string']); // Filters src attributes in HTML tags also.
+
+				return ($body = $this->plugin->utils_string->spcsm_restore($spcsm));
+			}
+
+			/**
 			 * Handle ezPHP exclusions.
 			 *
 			 * @since 150214 Enhancing content/excerpt filters.
