@@ -312,11 +312,13 @@ namespace wp_kb_articles // Root namespace.
 				if(!($path = $this->plugin->utils_string->trim((string)$path, '', '/')))
 					return FALSE; // Not possible.
 
-				$url      = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
-				$response = $this->get_response($url);
+				$url = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
+				$url = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
 
-				return $response ? $response['body'] : FALSE;
+				if(($response = $this->get_response($url)))
+					return $response['body'];
+
+				return FALSE; // Failure.
 			}
 
 			/**
