@@ -645,6 +645,20 @@ namespace wp_kb_articles // Root namespace.
 
 				return $excerpt; // Excerpt w/ raw HTML preserved successfully.
 			}
+
+			/**
+			 * Is a string in SHA1 format?
+			 *
+			 * @since 150214 Enhancing content/excerpt filters.
+			 *
+			 * @param string $string The string to test.
+			 *
+			 * @return boolean `TRUE` if it's in SHA1 format.
+			 */
+			public function is_sha($string)
+			{
+				return (boolean)preg_match('/^[0-9a-f]{40}$/i', (string)$string);
+			}
 		}
 	}
 }
