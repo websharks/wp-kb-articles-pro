@@ -155,7 +155,7 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$posts = array(); // Initialize.
 
-				if(!($tree = $this->retrieve_sub_tree($tree)))
+				if(!($tree = $this->retrieve_tree($tree)))
 					return FALSE; // Error.
 
 				foreach($tree['tree'] as $_blob)
@@ -186,41 +186,41 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Retrieves an associative array of information on a particular article, including the body.
+			 * Retrieves an article, including the body.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $a SHA1 key or path to file.
+			 * @param string $sha_path A sha1 hash or file path.
 			 *
-			 * @return array|boolean Array with the following elements, else `FALSE` on failure.
+			 * @return array|boolean Array with the following elements; else `FALSE` on failure.
 			 *
 			 *    - `sha` SHA1 of the current body content data.
 			 *    - `headers` An associative array of all YAML headers.
 			 *    - `body` The body part of the article after YAML headers were parsed.
 			 */
-			public function retrieve_article($a)
+			public function retrieve_article($sha_path)
 			{
-				$article = array();
+				if(!($sha_path = $this->plugin->utils_string->trim((string)$sha_path, '', '/')))
+					return FALSE; // Not possible.
 
-				// Retrieve file data from GitHub.
-				if(($is_sha = (boolean)preg_match('/^[0-9a-f]{40}$/i', $a)))
+				if($this->plugin->utils_github->is_sha($sha_path))
 				{
-					if(!($blob = $this->retrieve_blob($a)) || !is_array($blob))
+					if(!($blob = $this->retrieve_blob($sha_path)))
 						return FALSE; // Error.
 
 					if($blob['encoding'] === 'base64')
 						$body = base64_decode($blob['content']);
 					else $body = $blob['content'];
 
-					// Set $article vars based on data from GitHub.
-					$article = array('sha' => $a);
+					$article = array('sha' => $sha_path);
 				}
-				else if(!$body = $this->retrieve_file($a))
-					return FALSE; // Error.
+				else // Assume it is a file path in this case.
+				{
+					if(!($body = $this->retrieve_file($sha_path)))
+						return FALSE; // Failure.
 
-				if(!$is_sha) // Reconstruct data if necessary.
 					$article = array('sha' => sha1('blob '.strlen($body)."\0".$body));
-
+				}
 				return array_merge($article, $this->parse_article($body));
 			}
 
