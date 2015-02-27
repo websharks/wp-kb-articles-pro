@@ -330,6 +330,7 @@ namespace wp_kb_articles // Root namespace.
 					'headers' => array(),
 					'body'    => '',
 				);
+				$article = (string)$article; // Force string value.
 				$article = str_replace(array("\r\n", "\r"), "\n", $article);
 				$article = trim($article); // Trim it up now.
 
