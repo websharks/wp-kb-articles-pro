@@ -271,16 +271,19 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Retrieves UTF-8 encoded file from GitHub via SHA1 key.
+			 * Retrieves file/blob contents.
 			 *
 			 * @since 150113 First documented version.
 			 *
 			 * @param string $sha SHA1 value to be retrieved from the GitHub repo.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return array|boolean File/blob; else `FALSE` on error.
 			 */
 			protected function retrieve_blob($sha)
 			{
+				if(!($sha = $this->plugin->utils_string->trim((string)$sha, '', '/')))
+					return FALSE; // Not possible.
+
 				$url      = 'api.github.com/repos/%1$s/%2$s/git/blobs/%3$s';
 				$url      = sprintf($url, $this->owner, $this->repo, $sha);
 				$response = $this->get_response($url);
