@@ -288,11 +288,14 @@ namespace wp_kb_articles // Root namespace.
 				if(!($sha = $this->plugin->utils_string->trim((string)$sha, '', '/')))
 					return FALSE; // Not possible.
 
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/blobs/%3$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $sha);
-				$response = $this->get_response($url);
+				$url = 'api.github.com/repos/%1$s/%2$s/git/blobs/%3$s';
+				$url = sprintf($url, $this->owner, $this->repo, $sha);
 
-				return $response ? json_decode($response['body'], TRUE) : FALSE;
+				if(($response = $this->get_response($url)))
+					if(is_array($response_json = json_decode($response['body'], TRUE)))
+						return $response_json;
+
+				return FALSE; // Failure.
 			}
 
 			/**
