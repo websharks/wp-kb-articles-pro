@@ -227,26 +227,30 @@ namespace wp_kb_articles // Root namespace.
 			/* === Base GitHub Retrieval === */
 
 			/**
-			 * Wrapper function for retrieve_blob and retrieve_file based on `$a`.
+			 * Wrapper for `retrieve_blob()` and `retrieve_file()`.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $a SHA1 key or path to file.
+			 * @param string $sha_path A sha1 hash or file path.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return string|boolean Body contents; else `FALSE` on error.
 			 */
-			protected function retrieve_body($a)
+			protected function retrieve_body($sha_path)
 			{
-				if(($is_sha = (boolean)preg_match('/^[0-9a-f]{40}$/i', $a)))
+				if(!($sha_path = $this->plugin->utils_string->trim((string)$sha_path, '', '/')))
+					return FALSE; // Not possible.
+
+				if($this->plugin->utils_github->is_sha($sha_path))
 				{
-					if(!($blob = $this->retrieve_blob($a)))
+					if(!($blob = $this->retrieve_blob($sha_path)))
 						return FALSE; // Error.
 
-					if($blob['encoding'] === 'base64')
+					if(!empty($blob['encoding']) && $blob['encoding'] === 'base64')
 						return base64_decode($blob['content']);
+
 					return $blob['content'];
 				}
-				return $this->retrieve_file($a);
+				return $this->retrieve_file($sha_path);
 			}
 
 			/**
