@@ -520,6 +520,7 @@ namespace wp_kb_articles // Root namespace.
 					return; // Nothing to do here.
 
 				$this->body = $this->plugin->utils_github->issue_redirect_filter($this->body);
+				$this->body = $this->plugin->utils_github->media_library_filter($this->body);
 
 				if($this->plugin->options['github_markdown_parse_enable'] && $this->content_type === 'text/markdown')
 				{
