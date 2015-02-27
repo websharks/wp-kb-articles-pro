@@ -140,7 +140,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $tree The tree to return articles from.
+			 * @param string $tree The tree to return articles from (optional).
 			 *
 			 * @return array|boolean An associative array of all articles with the following elements; else `FALSE` on error.
 			 *
@@ -151,18 +151,15 @@ namespace wp_kb_articles // Root namespace.
 			 *    - `url` Blog URL provided by the GitHub API.
 			 *    - `path` Path to Markdown file; relative to repo root.
 			 */
-			public function retrieve_articles($tree)
+			public function retrieve_articles($tree = '')
 			{
-				$posts = array(); // Initialize.
-
 				if(!($tree = $this->retrieve_tree($tree)))
 					return FALSE; // Error.
 
+				$articles = array(); // Initialize.
+
 				foreach($tree['tree'] as $_blob)
 				{
-					if($_blob['type'] !== 'blob')
-						continue; // Not a blob.
-
 					$_extension = $this->plugin->utils_fs->extension($_blob['path']);
 					$_basename  = basename($_blob['path'], $_extension ? '.'.$_extension : NULL);
 
@@ -175,14 +172,15 @@ namespace wp_kb_articles // Root namespace.
 					if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
 						continue; // Auto-exclude these basenames.
 
-					$_post                 = array(
-						'sha' => $_blob['sha'],
+					$_article                 = array(
+						'sha'  => $_blob['sha'],
+						'type' => $_blob['type'],
 					);
-					$posts[$_blob['path']] = $_post;
+					$articles[$_blob['path']] = $_article;
 				}
 				unset($_blob, $_extension, $_basename); // Housekeeping.
 
-				return $posts;
+				return $articles;
 			}
 
 			/**
