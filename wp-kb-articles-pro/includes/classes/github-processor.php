@@ -211,7 +211,8 @@ namespace wp_kb_articles // Root namespace.
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				$last_tree = (string)get_option(__NAMESPACE__.'_github_processor_last_tree');
+				$last_tree        = (string)get_option(__NAMESPACE__.'_github_processor_last_tree');
+				$last_path        = (string)get_option(__NAMESPACE__.'_github_processor_last_path');
 				if(!($this->files = $this->github_api->retrieve_articles($last_tree)))
 					return; // Nothing to do.
 
