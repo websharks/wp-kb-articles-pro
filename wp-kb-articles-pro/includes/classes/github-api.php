@@ -275,7 +275,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $sha SHA1 value to be retrieved from the GitHub repo.
+			 * @param string $sha A sha that identifies a blob to retrieve.
 			 *
 			 * @return array|boolean File/blob; else `FALSE` on error.
 			 */
@@ -292,16 +292,19 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Retrieves a UTF-8 encoded raw file from GitHub via path.
+			 * Retrieves file contents via path.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $path The path to the file to be retrieved.
+			 * @param string $path The path to a file to retrieve.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return string|boolean File contents; else `FALSE` on error.
 			 */
 			protected function retrieve_file($path)
 			{
+				if(!($path = $this->plugin->utils_string->trim((string)$path, '', '/')))
+					return FALSE; // Not possible.
+
 				$url      = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
 				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
 				$response = $this->get_response($url);
