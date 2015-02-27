@@ -136,20 +136,21 @@ namespace wp_kb_articles // Root namespace.
 			/* === Public Methods === */
 
 			/**
-			 * Retrieves an array of files within a repo.
+			 * Retrieves an array of directories/files within a repo.
 			 *
 			 * @since 150113 First documented version.
 			 *
 			 * @param string $tree The tree to return articles from (optional).
 			 *
-			 * @return array|boolean An associative array of all articles with the following elements; else `FALSE` on error.
+			 * @return array|boolean An associative array of all articles; else `FALSE` on error.
 			 *
-			 *    - `headers` An associative array of all YAML headers; if `$get_body` is `TRUE`.
-			 *    - `body` The body part of the article after YAML headers were parsed; if `$get_body` is `TRUE`.
+			 *    Array keys contain the directory/file paths.
+			 *    Each item in the array will contain the following elements:
 			 *
-			 *    - `sha` SHA1 provided by the GitHub API.
-			 *    - `url` Blog URL provided by the GitHub API.
-			 *    - `path` Path to Markdown file; relative to repo root.
+			 *    - `sha` The SHA1 from the GitHub side.
+			 *    - `type` Item type; i.e., `tree` or `blob`.
+			 *    - `url` Item URL from the GitHub side.
+			 *    - `path` Path to directory/file; relative to repo root.
 			 */
 			public function retrieve_articles($tree = '')
 			{
@@ -158,29 +159,32 @@ namespace wp_kb_articles // Root namespace.
 
 				$articles = array(); // Initialize.
 
-				foreach($tree['tree'] as $_blob)
+				foreach($tree['tree'] as $_tree_blob)
 				{
-					$_extension = $this->plugin->utils_fs->extension($_blob['path']);
-					$_basename  = basename($_blob['path'], $_extension ? '.'.$_extension : NULL);
+					$_extension = $this->plugin->utils_fs->extension($_tree_blob['path']);
+					$_basename  = basename($_tree_blob['path'], $_extension ? '.'.$_extension : NULL);
 
-					if(strpos($_basename, '.') === 0)
-						continue; // Exlude all dot files.
+					if(strpos($_basename, '.') === 0) // Applies to directories/files.
+						continue; // Exlude dot directories/files.
 
-					if(!in_array($_extension, $this->supported_file_extensions, TRUE))
-						continue; // Not a supported file extension.
+					if($_tree_blob['type'] === 'blob') // i.e., not a directory.
+					{
+						if(!in_array($_extension, $this->supported_file_extensions, TRUE))
+							continue; // Not a supported file extension.
 
-					if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
-						continue; // Auto-exclude these basenames.
-
-					$_article                 = array(
-						'sha'  => $_blob['sha'],
-						'type' => $_blob['type'],
+						if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
+							continue; // Auto-exclude these basenames.
+					}
+					$_article                      = array(
+						'sha'  => $_tree_blob['sha'],
+						'type' => $_tree_blob['type'],
+						'url'  => $_tree_blob['url'],
 					);
-					$articles[$_blob['path']] = $_article;
+					$articles[$_tree_blob['path']] = $_article;
 				}
-				unset($_blob, $_extension, $_basename); // Housekeeping.
+				unset($_tree_blob, $_extension, $_basename); // Housekeeping.
 
-				return $articles;
+				return $articles; // Array of all directories/files (articles).
 			}
 
 			/**
