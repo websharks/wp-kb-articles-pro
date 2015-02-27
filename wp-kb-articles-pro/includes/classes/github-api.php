@@ -155,7 +155,7 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$posts = array(); // Initialize.
 
-				if(!($tree = $this->retrieve_tree($tree)))
+				if(!($tree = $this->retrieve_sub_tree($tree)))
 					return FALSE; // Error.
 
 				foreach($tree['tree'] as $_blob)
@@ -252,35 +252,19 @@ namespace wp_kb_articles // Root namespace.
 			/**
 			 * Retrieves list of directories/files.
 			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @return array|boolean Array of directories/files; else `FALSE` on error.
-			 */
-			protected function retrieve_tree()
-			{
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $this->branch);
-				$response = $this->get_response($url);
-
-				return $response ? json_decode($response['body'], TRUE) : FALSE;
-			}
-
-			/**
-			 * Retrieves list of directories/files.
-			 *
 			 * @since 150227 Improving GitHub API recursion.
 			 *
-			 * @param string $sub_tree A specific sub-tree (i.e., directory path) to retrieve.
+			 * @param string $tree A specific tree (i.e., directory path) to retrieve.
 			 *
 			 * @return array|boolean Array of directories/files; else `FALSE` on error.
 			 */
-			protected function retrieve_sub_tree($sub_tree)
+			protected function retrieve_tree($tree = '')
 			{
-				if(!($sub_tree = $this->plugin->utils_string->trim((string)$sub_tree, '', '/')))
-					return FALSE; // Not possible.
+				if(($tree = $this->plugin->utils_string->trim((string)$tree, '', '/')))
+					$tree = '/'.$tree; // Add a leading `/` for use below.
 
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s/%4$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $sub_tree);
+				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s%4$s';
+				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $tree);
 				$response = $this->get_response($url);
 
 				return $response ? json_decode($response['body'], TRUE) : FALSE;
