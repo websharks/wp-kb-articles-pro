@@ -136,13 +136,13 @@ namespace wp_kb_articles // Root namespace.
 			/* === Public Methods === */
 
 			/**
-			 * Retrieves an array of data for all `.MD` files within a repo.
+			 * Retrieves an array of files within a repo.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param bool $get_body If TRUE, this function will retrieve body contents for each `.md` file in the request.
+			 * @param string $tree The tree to return articles from.
 			 *
-			 * @return array|boolean An associative array of all articles with the following elements, else `FALSE` on error.
+			 * @return array|boolean An associative array of all articles with the following elements; else `FALSE` on error.
 			 *
 			 *    - `headers` An associative array of all YAML headers; if `$get_body` is `TRUE`.
 			 *    - `body` The body part of the article after YAML headers were parsed; if `$get_body` is `TRUE`.
@@ -151,11 +151,11 @@ namespace wp_kb_articles // Root namespace.
 			 *    - `url` Blog URL provided by the GitHub API.
 			 *    - `path` Path to Markdown file; relative to repo root.
 			 */
-			public function retrieve_articles($get_body = FALSE)
+			public function retrieve_articles($tree)
 			{
 				$posts = array(); // Initialize.
 
-				if(!($tree = $this->retrieve_tree()))
+				if(!($tree = $this->retrieve_tree($tree)))
 					return FALSE; // Error.
 
 				foreach($tree['tree'] as $_blob)
@@ -175,16 +175,9 @@ namespace wp_kb_articles // Root namespace.
 					if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
 						continue; // Auto-exclude these basenames.
 
-					$_post = array(
+					$_post                 = array(
 						'sha' => $_blob['sha'],
 					);
-					if($get_body) // Parse articles too?
-					{
-						if(!($_body = $this->retrieve_body($_post['sha'])))
-							return FALSE; // Failure.
-
-						$_post = array_merge($_post, $this->parse_article($_body));
-					}
 					$posts[$_blob['path']] = $_post;
 				}
 				unset($_blob, $_extension, $_basename); // Housekeeping.
@@ -257,16 +250,37 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
-			 * Retrieves list of files (as in, directory list) recursively from GitHub repo.
+			 * Retrieves list of directories/files.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @return array|boolean Array of files from GitHub, else `FALSE` on error.
+			 * @return array|boolean Array of directories/files; else `FALSE` on error.
 			 */
 			protected function retrieve_tree()
 			{
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s?recursive=1';
+				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s';
 				$url      = sprintf($url, $this->owner, $this->repo, $this->branch);
+				$response = $this->get_response($url);
+
+				return $response ? json_decode($response['body'], TRUE) : FALSE;
+			}
+
+			/**
+			 * Retrieves list of directories/files.
+			 *
+			 * @since 150227 Improving GitHub API recursion.
+			 *
+			 * @param string $sub_tree A specific sub-tree (i.e., directory path) to retrieve.
+			 *
+			 * @return array|boolean Array of directories/files; else `FALSE` on error.
+			 */
+			protected function retrieve_sub_tree($sub_tree)
+			{
+				if(!($sub_tree = $this->plugin->utils_string->trim((string)$sub_tree, '', '/')))
+					return FALSE; // Not possible.
+
+				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s/%4$s';
+				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $sub_tree);
 				$response = $this->get_response($url);
 
 				return $response ? json_decode($response['body'], TRUE) : FALSE;

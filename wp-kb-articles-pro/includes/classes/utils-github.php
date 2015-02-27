@@ -449,7 +449,8 @@ namespace wp_kb_articles // Root namespace.
 						return $m[0]; // Not applicable.
 
 					$sql = "SELECT `ID` FROM `".esc_sql($_this->plugin->utils_db->wp->posts)."`".
-					       " WHERE `guid` = '".esc_sql($guid)."' AND `post_type` = 'attachment' LIMIT 1";
+					       " WHERE (`guid` = '".esc_sql('http://'.$guid)."' OR `guid` = '".esc_sql($guid)."')".
+					       " AND `post_type` = 'attachment' LIMIT 1";
 					if(($attachment_id = (integer)$_this->plugin->utils_db->wp->get_var($sql))) // Exists?
 					{
 						if(($src = wp_get_attachment_image_src($attachment_id, 'full')))
