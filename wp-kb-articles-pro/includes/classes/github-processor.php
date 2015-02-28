@@ -77,6 +77,13 @@ namespace wp_kb_articles // Root namespace.
 			protected $last_path;
 
 			/**
+			 * @var boolean Do a fast-foward?
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $do_fast_forward;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -135,6 +142,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->github_api                    = NULL; // Initialize the API reference.
 				$this->last_tree                     = $this->plugin->options['github_processor_last_tree'];
 				$this->last_path                     = $this->plugin->options['github_processor_last_path'];
+				$this->do_fast_forward               = $this->last_tree && $this->last_path;
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -210,13 +218,30 @@ namespace wp_kb_articles // Root namespace.
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				$this->maybe_process_trees_blobs($this->github_api->retrieve_article_trees_blobs());
+				if(($root_trees_blobs = $this->github_api->retrieve_article_trees_blobs()))
+					$this->maybe_process_trees_blobs($root_trees_blobs, 'root');
 			}
 
-			protected function maybe_process_trees_blobs(array $trees_blobs)
+			/**
+			 * Processes trees/blobs recursively.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param array  $trees_blobs An array representing the current tree (or sub-tree).
+			 * @param string $tree_path The current tree (or sub-tree) path.
+			 *
+			 * @throws \exception If invalid parameters are passed to this routine.
+			 */
+			protected function maybe_process_trees_blobs(array $trees_blobs, $tree_path)
 			{
+				if(!($tree_path = trim((string)$tree_path))) // Must have this too.
+					throw new \exception(__('Missing tree path.', $this->plugin->text_domain));
+
 				foreach($trees_blobs as $_path => $_tree_blob)
 				{
+					if($this->do_fast_forward)
+					{
+					}
 					$this->maybe_process_file($_path, $_tree_blob);
 
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
