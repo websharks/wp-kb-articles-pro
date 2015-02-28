@@ -457,24 +457,35 @@ namespace wp_kb_articles // Root namespace.
 							return $prefix.$src[0].$suffix; // Attachment src URL.
 						return $m[0]; // Not possible.
 					}
-					if(!is_writable($uploads['path']))
-						return $m[0]; // Not possible.
-
 					if(!($remote = wp_remote_get($m['url'])))
 						return $m[0]; // Not possible.
 
 					if(!($remote_response = wp_remote_retrieve_body($remote)))
 						return $m[0]; // Not possible.
 
-					$file = $uploads['path'].'/'.$guid.'.'.$path['ext'];
-					if(!file_put_contents($file, $remote_response))
+					$tmp_file = $_this->plugin->utils_fs->n_seps(get_temp_dir()).
+					            '/'.$_this->plugin->utils_enc->uunnci_key_20_max().'.'.$path['ext'];
+					$file     = $uploads['path'].'/'.$guid.'.'.$path['ext'];
+
+					if(!is_writable(dirname($tmp_file)) || !is_writable(dirname($file)))
 						return $m[0]; // Not possible.
 
-					if(stripos(finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file), 'image/') !== 0)
+					if(file_put_contents($tmp_file, $remote_response) === FALSE)
+						return $m[0]; // Not possible.
+
+					if(file_put_contents($file, $remote_response) === FALSE)
+						return $m[0]; // Not possible.
+
+					if(!($finfo = finfo_open(FILEINFO_MIME_TYPE))
+					   || stripos(finfo_file($finfo, $tmp_file), 'image/') !== 0
+					) // Make sure what we downloaded has an `image/*` MIME type.
 					{
-						unlink($file); // Did not retrieve expected data type.
-						return $m[0]; // Not possible in this case.
+						unlink($tmp_file); // Ditch tmp file.
+						unlink($file); // Ditch uploaded file.
+						return $m[0]; // Not possible.
 					}
+					unlink($tmp_file); // Ditch tmp file.
+
 					$attachment = array(
 						'guid'           => $guid,
 						'file'           => $file,
@@ -482,8 +493,10 @@ namespace wp_kb_articles // Root namespace.
 						'post_title'     => preg_replace('/\.[^.]+$/', '', basename($url['path'])),
 					);
 					if(!($attachment_id = (integer)wp_insert_attachment($attachment)))
+					{
+						unlink($file); // Ditch uploaded file.
 						return $m[0]; // Not possible.
-
+					}
 					if(!($src = wp_get_attachment_image_src($attachment_id, 'full')))
 						return $m[0]; // Not possible.
 
