@@ -77,7 +77,7 @@ namespace wp_kb_articles // Root namespace.
 			protected $last_path;
 
 			/**
-			 * @var boolean Do a fast-foward?
+			 * @var boolean Do a fast-forward?
 			 *
 			 * @since 150228 Improving GitHub API recursion.
 			 */
@@ -219,7 +219,7 @@ namespace wp_kb_articles // Root namespace.
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
 				if(($root_trees_blobs = $this->github_api->retrieve_article_trees_blobs()))
-					$this->maybe_process_trees_blobs($root_trees_blobs, 'root');
+					$this->maybe_process_trees_blobs($root_trees_blobs, '___root___');
 			}
 
 			/**
@@ -239,10 +239,14 @@ namespace wp_kb_articles // Root namespace.
 
 				foreach($trees_blobs as $_path => $_tree_blob)
 				{
-					if($this->do_fast_forward)
-					{
-					}
-					$this->maybe_process_file($_path, $_tree_blob);
+					if($this->do_fast_forward && $tree_path === $this->last_tree && $_path = $this->last_path)
+						$this->do_fast_forward = FALSE; // Where we left off; stop fast-forwarding.
+
+					if($_tree_blob['type'] === 'tree') // Recursion occurs here.
+						$this->maybe_process_trees_blobs($this->github_api->retrieve_article_trees_blobs($_path), $_path);
+
+					if(!$this->do_fast_forward) // Only if not fast-forwarding.
+						$this->maybe_process_file($_path, $_tree_blob);
 
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
@@ -266,6 +270,9 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function maybe_process_file($path, array $file)
 			{
+				if($this->do_fast_forward)
+					return; // Nothing to do.
+
 				if(!($path = trim((string)$path))) // Must have path.
 					throw new \exception(__('Missing path.', $this->plugin->text_domain));
 
@@ -311,6 +318,9 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function update_last_tree($tree)
 			{
+				if($this->do_fast_forward)
+					return; // Nothing to do.
+
 				$this->last_tree = trim((string)$tree);
 				$this->plugin->options_quick_save(array('github_processor_last_tree' => $this->last_tree));
 			}
@@ -324,6 +334,9 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function update_last_path($path)
 			{
+				if($this->do_fast_forward)
+					return; // Nothing to do.
+
 				$this->last_path = trim((string)$path);
 				$this->plugin->options_quick_save(array('github_processor_last_path' => $this->last_path));
 			}
@@ -353,7 +366,10 @@ namespace wp_kb_articles // Root namespace.
 			protected function is_delay_out_of_time()
 			{
 				if(!$this->delay) // No delay?
-					return FALSE; // Nope; nothing to do here.
+					return FALSE; // Nothing to do.
+
+				if($this->do_fast_forward)
+					return FALSE; // Nothing to do.
 
 				usleep($this->delay * 1000); // Delay.
 
