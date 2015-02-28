@@ -92,6 +92,7 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected $excluded_file_basenames = array(
 				'readme',
+				'contributing',
 				'changelog',
 				'changes',
 				'license',
