@@ -251,7 +251,7 @@ namespace wp_kb_articles // Root namespace.
 
 					if($_tree_blob['type'] === 'tree') // Recursion occurs here; i.e., query sub-trees.
 					{
-						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_path)))
+						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_tree_blob['sha'])))
 							$this->maybe_process_trees_blobs($_path, $_sub_trees_blobs);
 						$this->processed_trees_blobs_counter++; // Bump the counter.
 
@@ -265,11 +265,17 @@ namespace wp_kb_articles // Root namespace.
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
 
+					$_last_root_path = // Is this the last root path?
+						$tree_path === '___root___' && $path_counter >= $total_paths;
+
+					if($_last_root_path) $this->fast_forwarding = FALSE;
+					if($_last_root_path) $this->maybe_update_last_tree('');
+					if($_last_root_path) $this->maybe_update_last_path('');
+
 					if($this->is_out_of_time()) break; // Out of time.
 
-					if(!($tree_path === '___root___' && $path_counter >= $total_paths))
-						if($this->is_delay_out_of_time())
-							break; // Out of time.
+					if(!$_last_root_path && $this->is_delay_out_of_time())
+						break; // Out of time.
 				}
 				unset($_path, $_tree_blob, $_sub_trees_blobs); // Housekeeping.
 			}
@@ -287,6 +293,10 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function maybe_process_file($path, array $file)
 			{
+				print_r($path."\n");
+				var_dump($this->fast_forwarding);
+				print_r($file);
+
 				if($this->fast_forwarding)
 					return; // Nothing to do.
 

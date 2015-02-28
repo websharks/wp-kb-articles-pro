@@ -141,7 +141,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $tree_path A specific tree (i.e., directory path) to retrieve.
+			 * @param string $sha A specific tree (i.e., directory sha) to retrieve.
 			 *
 			 * @return array|boolean An associative array of all articles; else `FALSE` on error.
 			 *
@@ -151,9 +151,9 @@ namespace wp_kb_articles // Root namespace.
 			 *    - `sha` The SHA1 from the GitHub side.
 			 *    - `type` Item type; i.e., `tree` or `blob`.
 			 */
-			public function retrieve_article_trees_blobs($tree_path = '')
+			public function retrieve_article_trees_blobs($sha = '')
 			{
-				if(!($tree = $this->retrieve_tree($tree_path)))
+				if(!($tree = $this->retrieve_tree($sha)))
 					return FALSE; // Not possible.
 
 				$trees_blobs = array(); // Initialize.
@@ -257,17 +257,16 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150227 Improving GitHub API recursion.
 			 *
-			 * @param string $tree_path A specific tree (i.e., directory path) to retrieve.
+			 * @param string $sha A specific tree (i.e., directory sha) to retrieve.
 			 *
 			 * @return array|boolean Array of directories/files; else `FALSE` on error.
 			 */
-			protected function retrieve_tree($tree_path = '')
+			protected function retrieve_tree($sha = '')
 			{
-				if(($tree_path = $this->plugin->utils_string->trim((string)$tree_path, '', '/')))
-					$tree_path = '/'.$tree_path; // Add a leading `/` for use below.
+				$sha = $this->plugin->utils_string->trim((string)$sha, '', '/');
 
 				$url = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s%4$s';
-				$url = sprintf($url, $this->owner, $this->repo, $this->branch, $tree_path);
+				$url = sprintf($url, $this->owner, $this->repo, $sha ? '' : $this->branch, $sha);
 
 				if(($response = $this->get_response($url)))
 					if(is_array($response_json = json_decode($response['body'], TRUE)))
