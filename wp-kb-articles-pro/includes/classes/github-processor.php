@@ -77,11 +77,11 @@ namespace wp_kb_articles // Root namespace.
 			protected $last_path;
 
 			/**
-			 * @var boolean Do a fast-forward?
+			 * @var boolean Fast-forwarding?
 			 *
 			 * @since 150228 Improving GitHub API recursion.
 			 */
-			protected $do_fast_forward;
+			protected $fast_forwarding;
 
 			/**
 			 * Class constructor.
@@ -142,7 +142,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->github_api                    = NULL; // Initialize the API reference.
 				$this->last_tree                     = $this->plugin->options['github_processor_last_tree'];
 				$this->last_path                     = $this->plugin->options['github_processor_last_path'];
-				$this->do_fast_forward               = $this->last_tree && $this->last_path;
+				$this->fast_forwarding               = $this->last_tree && $this->last_path;
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -219,7 +219,7 @@ namespace wp_kb_articles // Root namespace.
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
 				if(($root_trees_blobs = $this->github_api->retrieve_article_trees_blobs()))
-					$this->maybe_process_trees_blobs($root_trees_blobs, '___root___');
+					$this->maybe_process_trees_blobs('___root___', $root_trees_blobs);
 			}
 
 			/**
@@ -227,26 +227,33 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150228 Improving GitHub API recursion.
 			 *
-			 * @param array  $trees_blobs An array representing the current tree (or sub-tree).
 			 * @param string $tree_path The current tree (or sub-tree) path.
+			 * @param array  $trees_blobs An array representing the current tree (or sub-tree).
 			 *
 			 * @throws \exception If invalid parameters are passed to this routine.
 			 */
-			protected function maybe_process_trees_blobs(array $trees_blobs, $tree_path)
+			protected function maybe_process_trees_blobs($tree_path, array $trees_blobs)
 			{
-				if(!($tree_path = trim((string)$tree_path))) // Must have this too.
+				if(!($tree_path = trim((string)$tree_path))) // Must have.
 					throw new \exception(__('Missing tree path.', $this->plugin->text_domain));
+
+				$this->maybe_update_last_tree($tree_path); // Update.
 
 				foreach($trees_blobs as $_path => $_tree_blob)
 				{
-					if($this->do_fast_forward && $tree_path === $this->last_tree && $_path = $this->last_path)
-						$this->do_fast_forward = FALSE; // Where we left off; stop fast-forwarding.
+					if($this->fast_forwarding && $tree_path === $this->last_tree && $_path = $this->last_path)
+						$this->fast_forwarding = FALSE; // Where we left off; stop fast-forwarding.
 
-					if($_tree_blob['type'] === 'tree') // Recursion occurs here.
-						$this->maybe_process_trees_blobs($this->github_api->retrieve_article_trees_blobs($_path), $_path);
-
-					if(!$this->do_fast_forward) // Only if not fast-forwarding.
+					if($_tree_blob['type'] === 'tree') // Recursion occurs here; i.e., query sub-trees.
+					{
+						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_path)))
+							$this->maybe_process_trees_blobs($_path, $_sub_trees_blobs);
+						$this->processed_trees_blobs_counter++; // Bump the counter.
+					}
+					else // Blob; i.e., a file that we might need to process.
 						$this->maybe_process_file($_path, $_tree_blob);
+
+					$this->maybe_update_last_path($_path); // Update.
 
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
@@ -254,7 +261,9 @@ namespace wp_kb_articles // Root namespace.
 					if($this->is_out_of_time() || $this->is_delay_out_of_time())
 						break; // Out of time now; or after a possible delay.
 				}
-				unset($_path, $_tree_blob); // Housekeeping.
+				unset($_path, $_tree_blob, $_sub_trees_blobs); // Housekeeping.
+
+				$this->maybe_update_last_tree($tree_path); // Update.
 			}
 
 			/**
@@ -270,7 +279,7 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function maybe_process_file($path, array $file)
 			{
-				if($this->do_fast_forward)
+				if($this->fast_forwarding)
 					return; // Nothing to do.
 
 				if(!($path = trim((string)$path))) // Must have path.
@@ -316,9 +325,9 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @param string $tree The last tree.
 			 */
-			protected function update_last_tree($tree)
+			protected function maybe_update_last_tree($tree)
 			{
-				if($this->do_fast_forward)
+				if($this->fast_forwarding)
 					return; // Nothing to do.
 
 				$this->last_tree = trim((string)$tree);
@@ -332,9 +341,9 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @param string $path The last directory/file path.
 			 */
-			protected function update_last_path($path)
+			protected function maybe_update_last_path($path)
 			{
-				if($this->do_fast_forward)
+				if($this->fast_forwarding)
 					return; // Nothing to do.
 
 				$this->last_path = trim((string)$path);
@@ -368,7 +377,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!$this->delay) // No delay?
 					return FALSE; // Nothing to do.
 
-				if($this->do_fast_forward)
+				if($this->fast_forwarding)
 					return FALSE; // Nothing to do.
 
 				usleep($this->delay * 1000); // Delay.
