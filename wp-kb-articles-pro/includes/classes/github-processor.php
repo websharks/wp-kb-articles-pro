@@ -144,6 +144,9 @@ namespace wp_kb_articles // Root namespace.
 				$this->last_path               = $this->plugin->options['github_processor_last_path'];
 				$this->fast_forwarding         = $this->last_tree && $this->last_path;
 
+				echo 'LAST tree: '.$this->last_tree."\n";
+				echo 'LAST path: '.$this->last_path."\n";
+
 				$this->prep_cron_job();
 				$this->prep_current_user();
 				$this->prep_wp_filters();
@@ -253,6 +256,7 @@ namespace wp_kb_articles // Root namespace.
 					{
 						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_tree_blob['sha'])))
 							$this->maybe_process_trees_blobs($_path, $_sub_trees_blobs);
+						// @TODO if processing stops during recursion, we need to stop here.
 						$this->maybe_update_last_tree($tree_path); // Update.
 					}
 					else // Blob; i.e., a file that we might need to process.
