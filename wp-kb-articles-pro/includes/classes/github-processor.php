@@ -49,25 +49,11 @@ namespace wp_kb_articles // Root namespace.
 			protected $max_limit;
 
 			/**
-			 * @var array Files being processed in the tree.
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $files;
-
-			/**
-			 * @var integer Total files.
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $total_files;
-
-			/**
 			 * @var integer Processed file counter.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected $processed_file_counter;
+			protected $processed_files_counter;
 
 			/**
 			 * @var github_api GitHub API instance.
@@ -75,6 +61,27 @@ namespace wp_kb_articles // Root namespace.
 			 * @since 150113 First documented version.
 			 */
 			protected $github_api;
+
+			/**
+			 * @var string Last tree (or sub-tree).
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $last_tree;
+
+			/**
+			 * @var string Last directory/file path.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $last_path;
+
+			/**
+			 * @var boolean Fast-forwarding?
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $fast_forwarding;
 
 			/**
 			 * Class constructor.
@@ -131,10 +138,11 @@ namespace wp_kb_articles // Root namespace.
 				$upper_max_limit = (integer)apply_filters(__CLASS__.'_upper_max_limit', 1000);
 				if($this->max_limit > $upper_max_limit) $this->max_limit = $upper_max_limit;
 
-				$this->files                  = array(); // Initialize.
-				$this->total_files            = 0; // Initialize; zero for now.
-				$this->processed_file_counter = 0; // Initialize; zero for now.
-				$this->github_api             = NULL; // Initialize.
+				$this->processed_files_counter = 0; // Initialize; zero for now.
+				$this->github_api              = NULL; // Initialize the API reference.
+				$this->last_tree               = $this->plugin->options['github_processor_last_tree'];
+				$this->last_path               = $this->plugin->options['github_processor_last_path'];
+				$this->fast_forwarding         = $this->last_tree && $this->last_path;
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -204,32 +212,76 @@ namespace wp_kb_articles // Root namespace.
 					array(
 						'owner'    => $this->plugin->options['github_mirror_owner'],
 						'repo'     => $this->plugin->options['github_mirror_repo'],
-
 						'branch'   => $this->plugin->options['github_mirror_branch'],
 
 						'username' => $this->plugin->options['github_mirror_username'],
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				if(!($this->files = $this->github_api->retrieve_articles()))
-					return; // Nothing to do.
+				if(($root_trees_blobs = $this->github_api->retrieve_article_trees_blobs()))
+					$this->maybe_process_trees_blobs('___root___', $root_trees_blobs);
+			}
 
-				$this->total_files = count($this->files);
+			/**
+			 * Processes trees/blobs recursively.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param string $tree_path The current tree (or sub-tree) path.
+			 * @param array  $trees_blobs An array representing the current tree (or sub-tree).
+			 *
+			 * @return boolean `FALSE` if the iteration is stopped early; else `TRUE`.
+			 *
+			 * @throws \exception If invalid parameters are passed to this routine.
+			 */
+			protected function maybe_process_trees_blobs($tree_path, array $trees_blobs)
+			{
+				if(!($tree_path = trim((string)$tree_path))) // Must have.
+					throw new \exception(__('Missing tree path.', $this->plugin->text_domain));
 
-				foreach($this->files as $_path => $_file)
+				$this->maybe_update_last_tree($tree_path); // Update.
+
+				$total_paths  = count($trees_blobs); // Total paths.
+				$path_counter = 0; // Initialize path counter; needed below.
+
+				foreach($trees_blobs as $_path => $_tree_blob)
 				{
-					$this->maybe_process_file($_path, $_file);
+					$path_counter++; // Bump this counter each time.
 
-					if($this->processed_file_counter >= $this->max_limit)
-						break; // Reached limit; all done for now.
+					if($this->fast_forwarding && $tree_path === $this->last_tree && $_path === $this->last_path)
+						$this->fast_forwarding = FALSE; // Where we left off; stop fast-forwarding.
 
-					if($this->processed_file_counter >= $this->total_files)
-						break; // Processed every single file in the tree?
+					if($_tree_blob['type'] === 'tree') // Recursion occurs here; i.e., query sub-trees.
+					{
+						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_tree_blob['sha'])))
+							if(!$this->maybe_process_trees_blobs($_path, $_sub_trees_blobs))
+								return FALSE; // If pprocessing stops during recursion.
+						$this->maybe_update_last_tree($tree_path); // Update.
+					}
+					else // Blob; i.e., a file that we might need to process.
+						$this->maybe_process_file($_path, $_tree_blob);
 
-					if($this->is_out_of_time() || $this->is_delay_out_of_time())
-						break; // Out of time now; or after a possible delay.
+					$this->maybe_update_last_path($_path); // Update.
+
+					$_is_last_root_path = // Is this the last root path?
+						$tree_path === '___root___' && $path_counter >= $total_paths;
+
+					if($_is_last_root_path) $this->fast_forwarding = FALSE;
+					if($_is_last_root_path) $this->maybe_update_last_tree('');
+					if($_is_last_root_path) $this->maybe_update_last_path('');
+
+					if(!$_is_last_root_path && $this->processed_files_counter >= $this->max_limit)
+						return FALSE; // Reached limit; all done for now.
+
+					if(!$_is_last_root_path && $this->is_out_of_time())
+						return FALSE; // Out of time.
+
+					if(!$_is_last_root_path && $this->is_delay_out_of_time())
+						return FALSE; // Out of time.
 				}
-				unset($_path, $_file); // Housekeeping.
+				unset($_path, $_tree_blob, $_sub_trees_blobs, $_is_last_root_path); // Housekeeping.
+
+				return TRUE; // Default return value.
 			}
 
 			/**
@@ -240,11 +292,14 @@ namespace wp_kb_articles // Root namespace.
 			 * @param string $path GitHub file path; relative to repo root.
 			 * @param array  $file File data from GitHub API tree call.
 			 *
-			 * @throws \exception If invalid parameters are pass to this routine.
+			 * @throws \exception If invalid parameters are passed to this routine.
 			 * @throws \exception If there is any failure to acquire a particular article.
 			 */
 			protected function maybe_process_file($path, array $file)
 			{
+				if($this->fast_forwarding)
+					return; // Nothing to do.
+
 				if(!($path = trim((string)$path))) // Must have path.
 					throw new \exception(__('Missing path.', $this->plugin->text_domain));
 
@@ -264,7 +319,7 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_file_counter++; // Bump the counter.
+					$this->processed_files_counter++; // Bump the counter.
 				}
 				else if($this->plugin->utils_github->get_sha($post_id) !== $file['sha'])
 				{
@@ -277,8 +332,40 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_file_counter++; // Bump the counter.
+					$this->processed_files_counter++; // Bump the counter.
 				}
+			}
+
+			/**
+			 * Updates last tree.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param string $tree The last tree.
+			 */
+			protected function maybe_update_last_tree($tree)
+			{
+				if($this->fast_forwarding)
+					return; // Nothing to do.
+
+				$this->last_tree = trim((string)$tree);
+				$this->plugin->options_quick_save(array('github_processor_last_tree' => $this->last_tree));
+			}
+
+			/**
+			 * Updates last directory/file path.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param string $path The last directory/file path.
+			 */
+			protected function maybe_update_last_path($path)
+			{
+				if($this->fast_forwarding)
+					return; // Nothing to do.
+
+				$this->last_path = trim((string)$path);
+				$this->plugin->options_quick_save(array('github_processor_last_path' => $this->last_path));
 			}
 
 			/**
@@ -306,10 +393,10 @@ namespace wp_kb_articles // Root namespace.
 			protected function is_delay_out_of_time()
 			{
 				if(!$this->delay) // No delay?
-					return FALSE; // Nope; nothing to do here.
+					return FALSE; // Nothing to do.
 
-				if($this->processed_file_counter >= $this->total_files)
-					return FALSE; // No delay on last blob.
+				if($this->fast_forwarding)
+					return FALSE; // Nothing to do.
 
 				usleep($this->delay * 1000); // Delay.
 

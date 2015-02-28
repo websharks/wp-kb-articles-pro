@@ -92,6 +92,7 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected $excluded_file_basenames = array(
 				'readme',
+				'contributing',
 				'changelog',
 				'changes',
 				'license',
@@ -136,176 +137,189 @@ namespace wp_kb_articles // Root namespace.
 			/* === Public Methods === */
 
 			/**
-			 * Retrieves an array of data for all `.MD` files within a repo.
+			 * Retrieves an array of directories/files within a repo.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param bool $get_body If TRUE, this function will retrieve body contents for each `.md` file in the request.
+			 * @param string $sha A specific tree (i.e., directory sha) to retrieve.
 			 *
-			 * @return array|boolean An associative array of all articles with the following elements, else `FALSE` on error.
+			 * @return array|boolean An associative array of all articles; else `FALSE` on error.
 			 *
-			 *    - `headers` An associative array of all YAML headers; if `$get_body` is `TRUE`.
-			 *    - `body` The body part of the article after YAML headers were parsed; if `$get_body` is `TRUE`.
+			 *    Array keys contain the directory/file paths.
+			 *    Each item in the array will contain the following elements:
 			 *
-			 *    - `sha` SHA1 provided by the GitHub API.
-			 *    - `url` Blog URL provided by the GitHub API.
-			 *    - `path` Path to Markdown file; relative to repo root.
+			 *    - `sha` The SHA1 from the GitHub side.
+			 *    - `type` Item type; i.e., `tree` or `blob`.
 			 */
-			public function retrieve_articles($get_body = FALSE)
+			public function retrieve_article_trees_blobs($sha = '')
 			{
-				$posts = array(); // Initialize.
+				if(!($tree = $this->retrieve_tree($sha)))
+					return FALSE; // Not possible.
 
-				if(!($tree = $this->retrieve_tree()))
-					return FALSE; // Error.
+				$trees_blobs = array(); // Initialize.
 
-				foreach($tree['tree'] as $_blob)
+				foreach($tree['tree'] as $_tree_blob)
 				{
-					if($_blob['type'] !== 'blob')
-						continue; // Not a blob.
+					$_extension = $this->plugin->utils_fs->extension($_tree_blob['path']);
+					$_basename  = basename($_tree_blob['path'], $_extension ? '.'.$_extension : NULL);
 
-					$_extension = $this->plugin->utils_fs->extension($_blob['path']);
-					$_basename  = basename($_blob['path'], $_extension ? '.'.$_extension : NULL);
+					if(strpos($_basename, '.') === 0) // Exclude?
+						continue; // Exlude dot dirs/files.
 
-					if(strpos($_basename, '.') === 0)
-						continue; // Exlude all dot files.
-
-					if(!in_array($_extension, $this->supported_file_extensions, TRUE))
-						continue; // Not a supported file extension.
-
-					if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
-						continue; // Auto-exclude these basenames.
-
-					$_post = array(
-						'sha' => $_blob['sha'],
-					);
-					if($get_body) // Parse articles too?
+					if($_tree_blob['type'] === 'blob') // i.e., not a directory.
 					{
-						if(!($_body = $this->retrieve_body($_post['sha'])))
-							return FALSE; // Failure.
+						if(!in_array($_extension, $this->supported_file_extensions, TRUE))
+							continue; // Not a supported file extension.
 
-						$_post = array_merge($_post, $this->parse_article($_body));
+						if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
+							continue; // Auto-exclude these basenames.
 					}
-					$posts[$_blob['path']] = $_post;
+					$trees_blobs[$_tree_blob['path']] = array(
+						'sha'  => $_tree_blob['sha'],
+						'type' => $_tree_blob['type'],
+					);
 				}
-				unset($_blob, $_extension, $_basename); // Housekeeping.
+				unset($_tree_blob, $_extension, $_basename); // Housekeeping.
 
-				return $posts;
+				return $trees_blobs; // Array of all sub-trees and article blobs.
 			}
 
 			/**
-			 * Retrieves an associative array of information on a particular article, including the body.
+			 * Retrieves an article, including the body.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $a SHA1 key or path to file.
+			 * @param string $sha_path A sha1 hash or file path.
 			 *
-			 * @return array|boolean Array with the following elements, else `FALSE` on failure.
+			 * @return array|boolean Array with the following elements; else `FALSE` on failure.
 			 *
 			 *    - `sha` SHA1 of the current body content data.
 			 *    - `headers` An associative array of all YAML headers.
 			 *    - `body` The body part of the article after YAML headers were parsed.
 			 */
-			public function retrieve_article($a)
+			public function retrieve_article($sha_path)
 			{
-				$article = array();
+				if(!($sha_path = $this->plugin->utils_string->trim((string)$sha_path, '', '/')))
+					return FALSE; // Not possible.
 
-				// Retrieve file data from GitHub.
-				if(($is_sha = (boolean)preg_match('/^[0-9a-f]{40}$/i', $a)))
+				if($this->plugin->utils_github->is_sha($sha_path))
 				{
-					if(!($blob = $this->retrieve_blob($a)) || !is_array($blob))
+					if(!($blob = $this->retrieve_blob($sha_path)))
 						return FALSE; // Error.
 
 					if($blob['encoding'] === 'base64')
 						$body = base64_decode($blob['content']);
 					else $body = $blob['content'];
 
-					// Set $article vars based on data from GitHub.
-					$article = array('sha' => $a);
+					$article = array('sha' => $sha_path);
 				}
-				else if(!$body = $this->retrieve_file($a))
-					return FALSE; // Error.
+				else // Assume it is a file path in this case.
+				{
+					if(!($body = $this->retrieve_file($sha_path)))
+						return FALSE; // Failure.
 
-				if(!$is_sha) // Reconstruct data if necessary.
 					$article = array('sha' => sha1('blob '.strlen($body)."\0".$body));
-
+				}
 				return array_merge($article, $this->parse_article($body));
 			}
 
 			/* === Base GitHub Retrieval === */
 
 			/**
-			 * Wrapper function for retrieve_blob and retrieve_file based on `$a`.
+			 * Wrapper for `retrieve_blob()` and `retrieve_file()`.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $a SHA1 key or path to file.
+			 * @param string $sha_path A sha1 hash or file path.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return string|boolean Body contents; else `FALSE` on error.
 			 */
-			protected function retrieve_body($a)
+			protected function retrieve_body($sha_path)
 			{
-				if(($is_sha = (boolean)preg_match('/^[0-9a-f]{40}$/i', $a)))
+				if(!($sha_path = $this->plugin->utils_string->trim((string)$sha_path, '', '/')))
+					return FALSE; // Not possible.
+
+				if($this->plugin->utils_github->is_sha($sha_path))
 				{
-					if(!($blob = $this->retrieve_blob($a)))
+					if(!($blob = $this->retrieve_blob($sha_path)))
 						return FALSE; // Error.
 
-					if($blob['encoding'] === 'base64')
+					if(!empty($blob['encoding']) && $blob['encoding'] === 'base64')
 						return base64_decode($blob['content']);
+
 					return $blob['content'];
 				}
-				return $this->retrieve_file($a);
+				return $this->retrieve_file($sha_path);
 			}
 
 			/**
-			 * Retrieves list of files (as in, directory list) recursively from GitHub repo.
+			 * Retrieves list of directories/files.
 			 *
-			 * @since 150113 First documented version.
+			 * @since 150227 Improving GitHub API recursion.
 			 *
-			 * @return array|boolean Array of files from GitHub, else `FALSE` on error.
+			 * @param string $sha A specific tree (i.e., directory sha) to retrieve.
+			 *
+			 * @return array|boolean Array of directories/files; else `FALSE` on error.
 			 */
-			protected function retrieve_tree()
+			protected function retrieve_tree($sha = '')
 			{
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s?recursive=1';
-				$url      = sprintf($url, $this->owner, $this->repo, $this->branch);
-				$response = $this->get_response($url);
+				$sha = $this->plugin->utils_string->trim((string)$sha, '', '/');
 
-				return $response ? json_decode($response['body'], TRUE) : FALSE;
+				$url = 'api.github.com/repos/%1$s/%2$s/git/trees/%3$s%4$s';
+				$url = sprintf($url, $this->owner, $this->repo, $sha ? '' : $this->branch, $sha);
+
+				if(($response = $this->get_response($url)))
+					if(is_array($response_json = json_decode($response['body'], TRUE)))
+						return $response_json;
+
+				return FALSE; // Failure.
 			}
 
 			/**
-			 * Retrieves UTF-8 encoded file from GitHub via SHA1 key.
+			 * Retrieves file/blob contents.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $sha SHA1 value to be retrieved from the GitHub repo.
+			 * @param string $sha A sha that identifies a blob to retrieve.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return array|boolean File/blob; else `FALSE` on error.
 			 */
 			protected function retrieve_blob($sha)
 			{
-				$url      = 'api.github.com/repos/%1$s/%2$s/git/blobs/%3$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $sha);
-				$response = $this->get_response($url);
+				if(!($sha = $this->plugin->utils_string->trim((string)$sha, '', '/')))
+					return FALSE; // Not possible.
 
-				return $response ? json_decode($response['body'], TRUE) : FALSE;
+				$url = 'api.github.com/repos/%1$s/%2$s/git/blobs/%3$s';
+				$url = sprintf($url, $this->owner, $this->repo, $sha);
+
+				if(($response = $this->get_response($url)))
+					if(is_array($response_json = json_decode($response['body'], TRUE)))
+						return $response_json;
+
+				return FALSE; // Failure.
 			}
 
 			/**
-			 * Retrieves a UTF-8 encoded raw file from GitHub via path.
+			 * Retrieves file contents via path.
 			 *
 			 * @since 150113 First documented version.
 			 *
-			 * @param string $path The path to the file to be retrieved.
+			 * @param string $path The path to a file to retrieve.
 			 *
-			 * @return string|boolean String body from GitHub, else `FALSE` on error.
+			 * @return string|boolean File contents; else `FALSE` on error.
 			 */
 			protected function retrieve_file($path)
 			{
-				$url      = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
-				$url      = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
-				$response = $this->get_response($url);
+				if(!($path = $this->plugin->utils_string->trim((string)$path, '', '/')))
+					return FALSE; // Not possible.
 
-				return $response ? $response['body'] : FALSE;
+				$url = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
+				$url = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
+
+				if(($response = $this->get_response($url)))
+					return $response['body'];
+
+				return FALSE; // Failure.
 			}
 
 			/**
@@ -326,6 +340,7 @@ namespace wp_kb_articles // Root namespace.
 					'headers' => array(),
 					'body'    => '',
 				);
+				$article = (string)$article; // Force string value.
 				$article = str_replace(array("\r\n", "\r"), "\n", $article);
 				$article = trim($article); // Trim it up now.
 
@@ -372,8 +387,7 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$default_args = array(
 					'headers'    => array(),
-					'user-agent' => apply_filters(__METHOD__.'_user_agent',
-					                              $this->plugin->name.' @ '.$_SERVER['HTTP_HOST'])
+					'user-agent' => $this->plugin->name.' @ '.$_SERVER['HTTP_HOST'],
 				);
 				$args         = array_merge($default_args, $args);
 				$args         = array_intersect_key($args, $default_args);
