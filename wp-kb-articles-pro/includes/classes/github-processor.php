@@ -239,8 +239,13 @@ namespace wp_kb_articles // Root namespace.
 
 				$this->maybe_update_last_tree($tree_path); // Update.
 
+				$total_paths  = count($trees_blobs); // Total paths.
+				$path_counter = 0; // Initialize path counter; needed below.
+
 				foreach($trees_blobs as $_path => $_tree_blob)
 				{
+					$path_counter++; // Bump this counter each time.
+
 					if($this->fast_forwarding && $tree_path === $this->last_tree && $_path === $this->last_path)
 						$this->fast_forwarding = FALSE; // Where we left off; stop fast-forwarding.
 
@@ -260,8 +265,11 @@ namespace wp_kb_articles // Root namespace.
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
 
-					if($this->is_out_of_time() || $this->is_delay_out_of_time())
-						break; // Out of time now; or after a possible delay.
+					if($this->is_out_of_time()) break; // Out of time.
+
+					if(!($tree_path === '___root___' && $path_counter >= $total_paths))
+						if($this->is_delay_out_of_time())
+							break; // Out of time.
 				}
 				unset($_path, $_tree_blob, $_sub_trees_blobs); // Housekeeping.
 			}
