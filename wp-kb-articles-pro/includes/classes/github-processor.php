@@ -49,20 +49,6 @@ namespace wp_kb_articles // Root namespace.
 			protected $max_limit;
 
 			/**
-			 * @var array Files being processed in the tree.
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $trees_blobs;
-
-			/**
-			 * @var integer Total files.
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $total_trees_blobs;
-
-			/**
 			 * @var integer Processed file counter.
 			 *
 			 * @since 150113 First documented version.
@@ -145,8 +131,6 @@ namespace wp_kb_articles // Root namespace.
 				$upper_max_limit = (integer)apply_filters(__CLASS__.'_upper_max_limit', 1000);
 				if($this->max_limit > $upper_max_limit) $this->max_limit = $upper_max_limit;
 
-				$this->trees_blobs                   = array(); // Initialize.
-				$this->total_trees_blobs             = 0; // Initialize; zero for now.
 				$this->processed_trees_blobs_counter = 0; // Initialize; zero for now.
 				$this->github_api                    = NULL; // Initialize the API reference.
 				$this->last_tree                     = $this->plugin->options['github_processor_last_tree'];
@@ -220,36 +204,28 @@ namespace wp_kb_articles // Root namespace.
 					array(
 						'owner'    => $this->plugin->options['github_mirror_owner'],
 						'repo'     => $this->plugin->options['github_mirror_repo'],
-
 						'branch'   => $this->plugin->options['github_mirror_branch'],
 
 						'username' => $this->plugin->options['github_mirror_username'],
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				if(!($this->trees_blobs = $this->github_api->retrieve_article_trees_blobs($this->last_tree)))
-					return; // Nothing to do.
+				$this->maybe_process_trees_blobs($this->github_api->retrieve_article_trees_blobs());
+			}
 
-				$this->total_trees_blobs = count($this->trees_blobs);
-
-				foreach($this->trees_blobs as $_path => $_tree_blob)
+			protected function maybe_process_trees_blobs(array $trees_blobs)
+			{
+				foreach($trees_blobs as $_path => $_tree_blob)
 				{
 					$this->maybe_process_file($_path, $_tree_blob);
 
 					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
 
-					if($this->processed_trees_blobs_counter >= $this->total_trees_blobs)
-						break; // Processed every single file in the tree?
-
 					if($this->is_out_of_time() || $this->is_delay_out_of_time())
 						break; // Out of time now; or after a possible delay.
 				}
 				unset($_path, $_tree_blob); // Housekeeping.
-			}
-
-			protected function maybe_process_trees_blobs()
-			{
 			}
 
 			/**
@@ -260,7 +236,7 @@ namespace wp_kb_articles // Root namespace.
 			 * @param string $path GitHub file path; relative to repo root.
 			 * @param array  $file File data from GitHub API tree call.
 			 *
-			 * @throws \exception If invalid parameters are pass to this routine.
+			 * @throws \exception If invalid parameters are passed to this routine.
 			 * @throws \exception If there is any failure to acquire a particular article.
 			 */
 			protected function maybe_process_file($path, array $file)
@@ -353,9 +329,6 @@ namespace wp_kb_articles // Root namespace.
 			{
 				if(!$this->delay) // No delay?
 					return FALSE; // Nope; nothing to do here.
-
-				if($this->processed_trees_blobs_counter >= $this->total_trees_blobs)
-					return FALSE; // No delay on last blob.
 
 				usleep($this->delay * 1000); // Delay.
 
