@@ -474,8 +474,10 @@ namespace wp_kb_articles // Root namespace.
 						return $m[0]; // Not possible.
 
 					if(file_put_contents($file, $remote_response) === FALSE)
+					{
+						unlink($tmp_file); // Ditch tmp file.
 						return $m[0]; // Not possible.
-
+					}
 					if(!($finfo = finfo_open(FILEINFO_MIME_TYPE))
 					   || stripos(finfo_file($finfo, $tmp_file), 'image/') !== 0
 					) // Make sure what we downloaded has an `image/*` MIME type.

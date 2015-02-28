@@ -53,21 +53,21 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected $files;
+			protected $trees_blobs;
 
 			/**
 			 * @var integer Total files.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected $total_files;
+			protected $total_trees_blobs;
 
 			/**
 			 * @var integer Processed file counter.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected $processed_file_counter;
+			protected $processed_trees_blobs_counter;
 
 			/**
 			 * @var github_api GitHub API instance.
@@ -145,12 +145,12 @@ namespace wp_kb_articles // Root namespace.
 				$upper_max_limit = (integer)apply_filters(__CLASS__.'_upper_max_limit', 1000);
 				if($this->max_limit > $upper_max_limit) $this->max_limit = $upper_max_limit;
 
-				$this->files                  = array(); // Initialize.
-				$this->total_files            = 0; // Initialize; zero for now.
-				$this->processed_file_counter = 0; // Initialize; zero for now.
-				$this->github_api             = NULL; // Initialize the API reference.
-				$this->last_tree              = $this->plugin->options['github_processor_last_tree'];
-				$this->last_path              = $this->plugin->options['github_processor_last_path'];
+				$this->trees_blobs                   = array(); // Initialize.
+				$this->total_trees_blobs             = 0; // Initialize; zero for now.
+				$this->processed_trees_blobs_counter = 0; // Initialize; zero for now.
+				$this->github_api                    = NULL; // Initialize the API reference.
+				$this->last_tree                     = $this->plugin->options['github_processor_last_tree'];
+				$this->last_path                     = $this->plugin->options['github_processor_last_path'];
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -227,25 +227,29 @@ namespace wp_kb_articles // Root namespace.
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				if(!($this->files = $this->github_api->retrieve_article_trees_blobs($this->last_tree)))
+				if(!($this->trees_blobs = $this->github_api->retrieve_article_trees_blobs($this->last_tree)))
 					return; // Nothing to do.
 
-				$this->total_files = count($this->files);
+				$this->total_trees_blobs = count($this->trees_blobs);
 
-				foreach($this->files as $_path => $_file)
+				foreach($this->trees_blobs as $_path => $_tree_blob)
 				{
-					$this->maybe_process_file($_path, $_file);
+					$this->maybe_process_file($_path, $_tree_blob);
 
-					if($this->processed_file_counter >= $this->max_limit)
+					if($this->processed_trees_blobs_counter >= $this->max_limit)
 						break; // Reached limit; all done for now.
 
-					if($this->processed_file_counter >= $this->total_files)
+					if($this->processed_trees_blobs_counter >= $this->total_trees_blobs)
 						break; // Processed every single file in the tree?
 
 					if($this->is_out_of_time() || $this->is_delay_out_of_time())
 						break; // Out of time now; or after a possible delay.
 				}
-				unset($_path, $_file); // Housekeeping.
+				unset($_path, $_tree_blob); // Housekeeping.
+			}
+
+			protected function maybe_process_trees_blobs()
+			{
 			}
 
 			/**
@@ -280,7 +284,7 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_file_counter++; // Bump the counter.
+					$this->processed_trees_blobs_counter++; // Bump the counter.
 				}
 				else if($this->plugin->utils_github->get_sha($post_id) !== $file['sha'])
 				{
@@ -293,7 +297,7 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_file_counter++; // Bump the counter.
+					$this->processed_trees_blobs_counter++; // Bump the counter.
 				}
 			}
 
@@ -350,7 +354,7 @@ namespace wp_kb_articles // Root namespace.
 				if(!$this->delay) // No delay?
 					return FALSE; // Nope; nothing to do here.
 
-				if($this->processed_file_counter >= $this->total_files)
+				if($this->processed_trees_blobs_counter >= $this->total_trees_blobs)
 					return FALSE; // No delay on last blob.
 
 				usleep($this->delay * 1000); // Delay.
