@@ -77,6 +77,20 @@ namespace wp_kb_articles // Root namespace.
 			protected $github_api;
 
 			/**
+			 * @var string Last tree (or sub-tree).
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $last_tree;
+
+			/**
+			 * @var string Last directory/file path.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 */
+			protected $last_path;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -134,7 +148,9 @@ namespace wp_kb_articles // Root namespace.
 				$this->files                  = array(); // Initialize.
 				$this->total_files            = 0; // Initialize; zero for now.
 				$this->processed_file_counter = 0; // Initialize; zero for now.
-				$this->github_api             = NULL; // Initialize.
+				$this->github_api             = NULL; // Initialize the API reference.
+				$this->last_tree              = $this->plugin->options['github_processor_last_tree'];
+				$this->last_path              = $this->plugin->options['github_processor_last_path'];
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -211,9 +227,7 @@ namespace wp_kb_articles // Root namespace.
 						'password' => $this->plugin->options['github_mirror_password'],
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
-				$last_tree        = (string)get_option(__NAMESPACE__.'_github_processor_last_tree');
-				$last_path        = (string)get_option(__NAMESPACE__.'_github_processor_last_path');
-				if(!($this->files = $this->github_api->retrieve_articles($last_tree)))
+				if(!($this->files = $this->github_api->retrieve_article_trees_blobs($this->last_tree)))
 					return; // Nothing to do.
 
 				$this->total_files = count($this->files);
@@ -281,6 +295,32 @@ namespace wp_kb_articles // Root namespace.
 						)));
 					$this->processed_file_counter++; // Bump the counter.
 				}
+			}
+
+			/**
+			 * Updates last tree.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param string $tree The last tree.
+			 */
+			protected function update_last_tree($tree)
+			{
+				$this->last_tree = trim((string)$tree);
+				$this->plugin->options_quick_save(array('github_processor_last_tree' => $this->last_tree));
+			}
+
+			/**
+			 * Updates last directory/file path.
+			 *
+			 * @since 150228 Improving GitHub API recursion.
+			 *
+			 * @param string $path The last directory/file path.
+			 */
+			protected function update_last_path($path)
+			{
+				$this->last_path = trim((string)$path);
+				$this->plugin->options_quick_save(array('github_processor_last_path' => $this->last_path));
 			}
 
 			/**

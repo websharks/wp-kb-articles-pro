@@ -149,23 +149,21 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 *    - `sha` The SHA1 from the GitHub side.
 			 *    - `type` Item type; i.e., `tree` or `blob`.
-			 *    - `url` Item URL from the GitHub side.
-			 *    - `path` Path to directory/file; relative to repo root.
 			 */
-			public function retrieve_articles($tree = '')
+			public function retrieve_article_trees_blobs($tree = '')
 			{
 				if(!($tree = $this->retrieve_tree($tree)))
 					return FALSE; // Error.
 
-				$articles = array(); // Initialize.
+				$trees_blobs = array(); // Initialize.
 
 				foreach($tree['tree'] as $_tree_blob)
 				{
 					$_extension = $this->plugin->utils_fs->extension($_tree_blob['path']);
 					$_basename  = basename($_tree_blob['path'], $_extension ? '.'.$_extension : NULL);
 
-					if(strpos($_basename, '.') === 0) // Applies to directories/files.
-						continue; // Exlude dot directories/files.
+					if(strpos($_basename, '.') === 0) // Exclude?
+						continue; // Exlude dot dirs/files.
 
 					if($_tree_blob['type'] === 'blob') // i.e., not a directory.
 					{
@@ -175,16 +173,14 @@ namespace wp_kb_articles // Root namespace.
 						if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
 							continue; // Auto-exclude these basenames.
 					}
-					$_article                      = array(
+					$trees_blobs[$_tree_blob['path']] = array(
 						'sha'  => $_tree_blob['sha'],
 						'type' => $_tree_blob['type'],
-						'url'  => $_tree_blob['url'],
 					);
-					$articles[$_tree_blob['path']] = $_article;
 				}
 				unset($_tree_blob, $_extension, $_basename); // Housekeeping.
 
-				return $articles; // Array of all directories/files (articles).
+				return $trees_blobs; // Array of all sub-trees and article blobs.
 			}
 
 			/**

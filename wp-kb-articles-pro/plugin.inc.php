@@ -415,6 +415,9 @@ namespace wp_kb_articles
 					'github_processor_max_limit'                                       => '100', // Total files.
 					'github_processor_realtime_max_limit'                              => '5', // Total files.
 
+					'github_processor_last_tree'                                       => '', // Last tree (or sub-tree).
+					'github_processor_last_path'                                       => '', // Last directory/file path.
+
 					/* Related to TOC generation. */
 
 					'toc_generation_enable'                                            => '1', // `0|1`; enable?
@@ -667,6 +670,22 @@ namespace wp_kb_articles
 			/*
 			 * Option-Related Methods
 			 */
+
+			/**
+			 * Saves new plugin options.
+			 *
+			 * @since 150227 Improving GitHub API Recursion.
+			 *
+			 * @param array $options An array of new plugin options.
+			 */
+			public function options_quick_save(array $options)
+			{
+				$this->options = array_merge($this->default_options, $this->options, $options);
+				$this->options = array_intersect_key($this->options, $this->default_options);
+				$this->options = array_map('strval', $this->options); // Force strings.
+
+				update_option(__NAMESPACE__.'_options', $this->options); // DB update.
+			}
 
 			/**
 			 * Saves new plugin options.
