@@ -53,7 +53,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150113 First documented version.
 			 */
-			protected $processed_trees_blobs_counter;
+			protected $processed_files_counter;
 
 			/**
 			 * @var github_api GitHub API instance.
@@ -138,11 +138,11 @@ namespace wp_kb_articles // Root namespace.
 				$upper_max_limit = (integer)apply_filters(__CLASS__.'_upper_max_limit', 1000);
 				if($this->max_limit > $upper_max_limit) $this->max_limit = $upper_max_limit;
 
-				$this->processed_trees_blobs_counter = 0; // Initialize; zero for now.
-				$this->github_api                    = NULL; // Initialize the API reference.
-				$this->last_tree                     = $this->plugin->options['github_processor_last_tree'];
-				$this->last_path                     = $this->plugin->options['github_processor_last_path'];
-				$this->fast_forwarding               = $this->last_tree && $this->last_path;
+				$this->processed_files_counter = 0; // Initialize; zero for now.
+				$this->github_api              = NULL; // Initialize the API reference.
+				$this->last_tree               = $this->plugin->options['github_processor_last_tree'];
+				$this->last_path               = $this->plugin->options['github_processor_last_path'];
+				$this->fast_forwarding         = $this->last_tree && $this->last_path;
 
 				$this->prep_cron_job();
 				$this->prep_current_user();
@@ -253,17 +253,12 @@ namespace wp_kb_articles // Root namespace.
 					{
 						if(($_sub_trees_blobs = $this->github_api->retrieve_article_trees_blobs($_tree_blob['sha'])))
 							$this->maybe_process_trees_blobs($_path, $_sub_trees_blobs);
-						$this->processed_trees_blobs_counter++; // Bump the counter.
-
 						$this->maybe_update_last_tree($tree_path); // Update.
 					}
 					else // Blob; i.e., a file that we might need to process.
 						$this->maybe_process_file($_path, $_tree_blob);
 
 					$this->maybe_update_last_path($_path); // Update.
-
-					if($this->processed_trees_blobs_counter >= $this->max_limit)
-						break; // Reached limit; all done for now.
 
 					$_last_root_path = // Is this the last root path?
 						$tree_path === '___root___' && $path_counter >= $total_paths;
@@ -272,12 +267,14 @@ namespace wp_kb_articles // Root namespace.
 					if($_last_root_path) $this->maybe_update_last_tree('');
 					if($_last_root_path) $this->maybe_update_last_path('');
 
-					if($this->is_out_of_time()) break; // Out of time.
+					if($this->processed_files_counter >= $this->max_limit)
+						break; // Reached limit; all done for now.
 
+					if($this->is_out_of_time()) break; // Out of time.
 					if(!$_last_root_path && $this->is_delay_out_of_time())
 						break; // Out of time.
 				}
-				unset($_path, $_tree_blob, $_sub_trees_blobs); // Housekeeping.
+				unset($_path, $_tree_blob, $_sub_trees_blobs, $_last_root_path); // Housekeeping.
 			}
 
 			/**
@@ -293,9 +290,7 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function maybe_process_file($path, array $file)
 			{
-				print_r($path."\n");
-				var_dump($this->fast_forwarding);
-				print_r($file);
+				echo $path.' :: FF = '.($this->fast_forwarding ? 'yes' : 'no')."\n";
 
 				if($this->fast_forwarding)
 					return; // Nothing to do.
@@ -319,7 +314,7 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_trees_blobs_counter++; // Bump the counter.
+					$this->processed_files_counter++; // Bump the counter.
 				}
 				else if($this->plugin->utils_github->get_sha($post_id) !== $file['sha'])
 				{
@@ -332,7 +327,7 @@ namespace wp_kb_articles // Root namespace.
 							'sha'  => $file['sha'],
 							'body' => $article['body'],
 						)));
-					$this->processed_trees_blobs_counter++; // Bump the counter.
+					$this->processed_files_counter++; // Bump the counter.
 				}
 			}
 
