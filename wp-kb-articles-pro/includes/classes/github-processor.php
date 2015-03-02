@@ -219,7 +219,7 @@ namespace wp_kb_articles // Root namespace.
 						'api_key'  => $this->plugin->options['github_mirror_api_key'],
 					));
 				if(($root_trees_blobs = $this->github_api->retrieve_article_trees_blobs()))
-					$this->maybe_process_trees_blobs('___root___', $root_trees_blobs);
+					$this->maybe_process_trees_blobs('/', $root_trees_blobs);
 			}
 
 			/**
@@ -248,6 +248,8 @@ namespace wp_kb_articles // Root namespace.
 				{
 					$path_counter++; // Bump this counter each time.
 
+					$_path = trim($tree_path, '/').'/'.$_path; // Absolute relative.
+
 					if($this->fast_forwarding && $tree_path === $this->last_tree && $_path === $this->last_path)
 						$this->fast_forwarding = FALSE; // Where we left off; stop fast-forwarding.
 
@@ -264,7 +266,7 @@ namespace wp_kb_articles // Root namespace.
 					$this->maybe_update_last_path($_path); // Update.
 
 					$_is_last_root_path = // Is this the last root path?
-						$tree_path === '___root___' && $path_counter >= $total_paths;
+						$tree_path === '/' && $path_counter >= $total_paths;
 
 					if($_is_last_root_path) $this->fast_forwarding = FALSE;
 					if($_is_last_root_path) $this->maybe_update_last_tree('');
