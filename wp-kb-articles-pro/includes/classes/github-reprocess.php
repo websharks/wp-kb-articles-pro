@@ -28,17 +28,26 @@ namespace wp_kb_articles // Root namespace.
 			protected $post_id;
 
 			/**
+			 * @var boolean Force reprocessing?
+			 *
+			 * @since 150302 Adding GitHub reprocessor.
+			 */
+			protected $force;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150302 Adding GitHub reprocessor.
 			 *
 			 * @param integer $post_id A specific post (article) ID.
+			 * @param boolean $force Force reprocessing? i.e., even if the sha is the same?
 			 */
-			public function __construct($post_id)
+			public function __construct($post_id, $force = TRUE)
 			{
 				parent::__construct();
 
 				$this->post_id = (integer)$post_id;
+				$this->force   = (boolean)$force;
 
 				if(!$this->plugin->utils_env->doing_ajax())
 					if(!$this->plugin->utils_env->doing_cron())
@@ -114,7 +123,8 @@ namespace wp_kb_articles // Root namespace.
 				if(!($article = $github_api->retrieve_article($path)))
 					return; // Not possible; no longer exists.
 
-				if($sha === $article['sha']) return; // No change.
+				if(!$this->force && $sha === $article['sha'])
+					return; // No change; not necesssary.
 
 				$github_mirror = new github_mirror(
 					array_merge($article['headers'], array(

@@ -11,14 +11,14 @@ namespace wp_kb_articles // Root namespace.
 	if(!defined('WPINC')) // MUST have WordPress.
 		exit('Do NOT access this file directly: '.basename(__FILE__));
 
-	if(!class_exists('\\'.__NAMESPACE__.'\\row_actions'))
+	if(!class_exists('\\'.__NAMESPACE__.'\\row_action_links'))
 	{
 		/**
 		 * Article Row Actions
 		 *
 		 * @since 150302 Adding post row actions.
 		 */
-		class row_actions extends abs_base
+		class row_action_links extends abs_base
 		{
 			/**
 			 * Class constructor.
@@ -45,14 +45,20 @@ namespace wp_kb_articles // Root namespace.
 				if($post->post_type !== $this->plugin->post_type)
 					return $actions; // Not applicable.
 
-				if($this->plugin->utils_github->get_path($post->ID))
-				{
-					$actions[__NAMESPACE__.'_github_reprocess']
-						= '<a href="'.esc_attr($this->plugin->utils_url->github_reprocess($post->ID)).'">'.
-						  __('Sync w/ GitHub', $this->plugin->text_domain).
-						  '</a>';
-				}
-				return $actions; // Possibly filtered actions.
+				if(!current_user_can('edit_post', $post->ID))
+					return $actions; // Not applicable.
+
+				if(!$this->plugin->utils_github->enabled_configured())
+					return $actions; // Not applicable.
+
+				if(!$this->plugin->utils_github->get_path($post->ID))
+					return $actions; // Not applicable.
+
+				$actions[__NAMESPACE__.'_github_reprocess']
+					= '<a href="'.esc_attr($this->plugin->utils_url->github_reprocess($post->ID)).'">'.
+					  __('Sync w/ GitHub', $this->plugin->text_domain).
+					  '</a>';
+				return $actions; // Filtered actions.
 			}
 		}
 	}

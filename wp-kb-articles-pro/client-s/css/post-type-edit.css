@@ -4,6 +4,11 @@
 /*
 GitHub read-only content.
 */
+#post-body-content .wp-kb-articles-github-reprocess-button
+{
+	float  : left;
+	margin : 5px 5px 0 0;
+}
 #post-body-content .wp-kb-articles-github-readonly-content-enabled-notice
 {
 	color         : #000000;

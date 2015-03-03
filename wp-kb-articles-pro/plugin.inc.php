@@ -530,7 +530,8 @@ namespace wp_kb_articles
 				add_shortcode('kb_articles_list_search_box', array($this, 'sc_list_search_box'));
 				add_shortcode('kb_articles_list', array($this, 'sc_list'));
 
-				add_filter('post_row_actions', array($this, 'article_row_actions'), 10, 2);
+				add_filter('post_row_actions', array($this, 'article_row_action_links'), 10, 2);
+				add_action('edit_form_before_permalink', array($this, 'article_action_links_bp'), 10, 1);
 				/*
 				 * Setup CRON-related hooks.
 				 */
@@ -746,9 +747,10 @@ namespace wp_kb_articles
 
 					wp_enqueue_style(__NAMESPACE__, $this->utils_url->to('/client-s/css/menu-pages.min.css'), $deps, $this->version, 'all');
 				}
-				else if($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
-				        && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type
-				) // If we are editing a post, and if the the post type indicates it's a KB article.
+				else if(($this->utils_env->is_menu_page('edit.php') && isset($_REQUEST['post_type']) && $_REQUEST['post_type'] === $this->post_type)
+				        || ($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
+				            && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type)
+				) // If we are editing one or more posts, and if the the post type indicates it's a KB article.
 				{
 					$deps = array('font-awesome', 'sharkicons'); // Dependencies.
 
@@ -790,12 +792,15 @@ namespace wp_kb_articles
 					));
 					wp_localize_script(__NAMESPACE__, __NAMESPACE__.'_i18n', array());
 				}
-				else if($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
-				        && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type
-				) // If we are editing a post, and if the the post type indicates it's a KB article.
+				else if(($this->utils_env->is_menu_page('edit.php') && isset($_REQUEST['post_type']) && $_REQUEST['post_type'] === $this->post_type)
+				        || ($this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
+				            && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type)
+				) // If we are editing one or more posts, and if the the post type indicates it's a KB article.
 				{
 					$deps                           = array('jquery'); // Dependencies.
-					$github_readonly_content_enable = $this->utils_github->enabled_configured() && $this->options['github_readonly_content_enable']
+					$github_readonly_content_enable = $this->options['github_readonly_content_enable']
+					                                  && $this->utils_github->enabled_configured()
+					                                  && isset($_REQUEST['post']) // May not have this.
 					                                  && $this->utils_github->get_sha((integer)$_REQUEST['post']);
 
 					if($github_readonly_content_enable) // GitHub enabled/configured, and the content should be readonly?
@@ -1404,14 +1409,31 @@ namespace wp_kb_articles
 			 *
 			 * @return array New row actions after having been filtered.
 			 */
-			public function article_row_actions(array $actions, \WP_Post $post)
+			public function article_row_action_links(array $actions, \WP_Post $post)
 			{
 				if($post->post_type !== $this->post_type)
 					return $actions; // Not applicable.
 
-				$row_actions = new row_actions(); // Row actions instance.
+				$row_action_links = new row_action_links(); // Row actions instance.
 
-				return $row_actions->filter($actions, $post);
+				return $row_action_links->filter($actions, $post);
+			}
+
+			/**
+			 * Handles article actions before permalink.
+			 *
+			 * @since 150302 Adding article actions.
+			 *
+			 * @attaches-to `edit_form_before_permalink` hook.
+			 *
+			 * @param \WP_Post $post Current post.
+			 */
+			public function article_action_links_bp(\WP_Post $post)
+			{
+				if($post->post_type !== $this->post_type)
+					return; // Not applicable.
+
+				new action_links_bp($post);
 			}
 
 			/**

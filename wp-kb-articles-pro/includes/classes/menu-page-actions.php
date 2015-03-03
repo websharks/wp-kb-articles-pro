@@ -253,16 +253,24 @@ namespace wp_kb_articles // Root namespace.
 				if(!current_user_can('edit_post', $post_id))
 					return; // Unauthenticated; ignore.
 
+				if(!($post = get_post($post_id)))
+					return; // Post missing.
+
 				$this->plugin->utils_env->doing_redirect(TRUE);
 
 				nocache_headers(); // Disallow browser cache.
 
-				new github_reprocess($post_id); // Reprocess.
+				new github_reprocess($post->ID); // Reprocess.
+				$post = get_post($post_id); // After updates.
 
-				$notice_markup = sprintf(__('KB Article Synchronized with GitHub.', $this->plugin->text_domain), esc_html($post_id));
+				$notice_markup = // Construct confirmation notice markup.
+					'<i class="fa fa-github fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'. // Float this to the left side.
+					sprintf(__('KB Article ID: <code>%1$s</code> has been updated to what exists on the GitHub side', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
+					'<span style="opacity:0.5;"><i class="fa fa-level-up fa-rotate-90" style="margin:0 .25em 0 1em;"></i> Title: <em>'.sprintf(__('"%1$s"', $this->plugin->text_domain), esc_html($post->post_title)).'</em></span>';
+
 				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
 
-				wp_redirect(get_edit_post_link($post_id, 'raw')).exit();
+				wp_redirect($this->plugin->utils_url->github_reprocessed()).exit();
 			}
 
 			/**
