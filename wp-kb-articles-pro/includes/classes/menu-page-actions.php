@@ -28,6 +28,13 @@ namespace wp_kb_articles // Root namespace.
 			protected $valid_actions;
 
 			/**
+			 * @var boolean Doing AJAX?
+			 *
+			 * @since 150302 Adding support for AJAX.
+			 */
+			protected $is_doing_ajax = FALSE;
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -45,8 +52,22 @@ namespace wp_kb_articles // Root namespace.
 
 					'import',
 					'export',
+
+					'github_connectivity_test_via_ajax',
 				);
 				$this->maybe_handle();
+			}
+
+			/**
+			 * Read-only access to `is_doing_ajax`.
+			 *
+			 * @since 150302 Adding support for AJAX.
+			 *
+			 * @return boolean `TRUE` if we are doing AJAX.
+			 */
+			public function is_doing_ajax()
+			{
+				return $this->is_doing_ajax;
 			}
 
 			/**
@@ -227,6 +248,48 @@ namespace wp_kb_articles // Root namespace.
 					return; // Unauthenticated; ignore.
 
 				$exporter = new $class($request_args); // Instantiate.
+			}
+
+			/**
+			 * Tests GitHub connectivity.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_connectivity_test_via_ajax($request_args)
+			{
+				$request_args = (array)$request_args;
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				$this->is_doing_ajax = TRUE;
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				if(empty($request_args['owner']) || empty($request_args['repo']) || empty($request_args['branch'])
+				   || (empty($request_args['api_key']) && (empty($request_args['username']) && empty($request_args['password'])))
+				) exit (__('Test failed. Missing one or more config. options.', $this->plugin->text_domain));
+
+				$github_api = new github_api(
+					array(
+						'owner'    => $request_args['owner'],
+						'repo'     => $request_args['repo'],
+						'branch'   => $request_args['branch'],
+
+						'username' => !empty($request_args['username']) ? $request_args['username'] : '',
+						'password' => !empty($request_args['password']) ? $request_args['password'] : '',
+						'api_key'  => !empty($request_args['api_key']) ? $request_args['api_key'] : '',
+					));
+				if($github_api->test_connectivity())
+					exit(__('Success! Your GitHub configuration looks good.', $this->plugin->text_domain));
+				exit(__('Test failed. Please check your GitHub configuration options.', $this->plugin->text_domain));
 			}
 		}
 	}

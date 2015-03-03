@@ -223,7 +223,40 @@ namespace wp_kb_articles // Root namespace.
 				return array_merge($article, $this->parse_article($body));
 			}
 
+			/**
+			 * Tests connectivity by checking rate limit.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @return boolean `TRUE` if rate limit is > 60.
+			 */
+			public function test_connectivity()
+			{
+				if(!($rate_limit = $this->retrieve_rate_limit()))
+					return FALSE; // Total failure.
+
+				return $rate_limit > 60; // Authenticated?
+			}
+
 			/* === Base GitHub Retrieval === */
+
+			/**
+			 * Retrieves API rate limit.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @return integer|boolean Rate limit; else `FALSE` on failure.
+			 */
+			protected function retrieve_rate_limit()
+			{
+				$url = 'api.github.com/rate_limit';
+
+				if(($response = $this->get_response($url)))
+					if(is_array($response_array = json_decode($response['body'], TRUE)))
+						return (integer)$response_array['resources']['core']['limit'];
+
+				return FALSE; // Failure.
+			}
 
 			/**
 			 * Wrapper for `retrieve_blob()` and `retrieve_file()`.
@@ -269,8 +302,8 @@ namespace wp_kb_articles // Root namespace.
 				$url = sprintf($url, $this->owner, $this->repo, $sha ? '' : $this->branch, $sha);
 
 				if(($response = $this->get_response($url)))
-					if(is_array($response_json = json_decode($response['body'], TRUE)))
-						return $response_json;
+					if(is_array($response_array = json_decode($response['body'], TRUE)))
+						return $response_array;
 
 				return FALSE; // Failure.
 			}
@@ -293,8 +326,8 @@ namespace wp_kb_articles // Root namespace.
 				$url = sprintf($url, $this->owner, $this->repo, $sha);
 
 				if(($response = $this->get_response($url)))
-					if(is_array($response_json = json_decode($response['body'], TRUE)))
-						return $response_json;
+					if(is_array($response_array = json_decode($response['body'], TRUE)))
+						return $response_array;
 
 				return FALSE; // Failure.
 			}

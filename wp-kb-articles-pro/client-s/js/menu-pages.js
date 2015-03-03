@@ -206,6 +206,35 @@
 		})
 			.trigger('change'); // Initialize.
 		/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+
+		$menuPage.find('button.pmp-github-connectivity-test').on('click', function(e)
+		{
+			e.preventDefault(), e.stopImmediatePropagation();
+
+			var $this = $(this),
+				$icon = $this.find('> .fa'),
+				postVars = {}; // Initialize.
+
+			postVars[namespace] = {
+				github_connectivity_test_via_ajax: {
+					owner : $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-owner').val()),
+					repo  : $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-repo').val()),
+					branch: $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-branch').val()),
+
+					username: $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-username').val()),
+					password: $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-password').val()),
+					api_key : $.trim($menuPage.find('#' + namespaceSlug + '-options-form-github-mirror-api-key').val())
+				}
+			};
+			$icon.removeClass('fa-github').addClass('fa-spinner fa-spin');
+
+			$.post(vars.ajaxEndpoint, postVars, function(data)
+			{
+				$icon.removeClass('fa-spinner fa-spin').addClass('fa-github'),
+					alert(data); // Show the response.
+			});
+		});
+		/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 	};
 	$document.ready(plugin.onReady); // DOM ready handler.
 })(jQuery);
