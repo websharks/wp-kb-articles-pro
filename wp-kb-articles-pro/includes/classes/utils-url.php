@@ -518,6 +518,27 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Perform GitHub reprocessing.
+			 *
+			 * @since 150302 Adding GitHub reprocessing.
+			 *
+			 * @param integer     $post_id A post (article) ID.
+			 *
+			 * @param string|null $scheme Optional . Defaults to `admin`.
+			 *    See {@link set_scheme()} method for further details.
+			 *
+			 * @return string GitHub reprocessing URL.
+			 */
+			public function github_reprocess($post_id, $scheme = 'admin')
+			{
+				$post_id = (integer)$post_id; // Force integer.
+				$url     = $this->page_nonce_only('', __NAMESPACE__, '', $scheme);
+				$args    = array(__NAMESPACE__ => array('github_reprocess' => $post_id));
+
+				return add_query_arg(urlencode_deep($args), $url);
+			}
+
+			/**
 			 * Template type updated URL.
 			 *
 			 * @since 150113 First documented version.

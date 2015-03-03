@@ -28,13 +28,6 @@ namespace wp_kb_articles // Root namespace.
 			protected $valid_actions;
 
 			/**
-			 * @var boolean Doing AJAX?
-			 *
-			 * @since 150113 First documented version.
-			 */
-			protected $is_doing_ajax = FALSE;
-
-			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -47,21 +40,8 @@ namespace wp_kb_articles // Root namespace.
 					'sc_list_via_ajax',
 					'cast_popularity_vote_via_ajax',
 					'record_stats_via_ajax',
-					'github_processor_via_ajax',
 				);
 				$this->maybe_handle();
-			}
-
-			/**
-			 * Read-only access to `is_doing_ajax`.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @return boolean `TRUE` if we are doing AJAX.
-			 */
-			public function is_doing_ajax()
-			{
-				return $this->is_doing_ajax;
 			}
 
 			/**
@@ -92,11 +72,12 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function sc_list_via_ajax($request_args)
 			{
-				$this->is_doing_ajax = TRUE;
-				$attr                = (string)$request_args;
-				$attr                = $this->plugin->utils_enc->xdecrypt($attr);
-				$attr                = (array)maybe_unserialize($attr);
-				$sc_list             = new sc_list($attr, '');
+				$this->plugin->utils_env->doing_ajax(TRUE);
+
+				$attr    = (string)$request_args;
+				$attr    = $this->plugin->utils_enc->xdecrypt($attr);
+				$attr    = (array)maybe_unserialize($attr);
+				$sc_list = new sc_list($attr, '');
 
 				status_header(200); // Return response.
 				header('Content-Type: text/html; charset=UTF-8');
@@ -112,11 +93,11 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function cast_popularity_vote_via_ajax($request_args)
 			{
-				$this->is_doing_ajax = TRUE;
-				$post_id             = (integer)$request_args;
-
 				define('DONOTCACHEPAGE', TRUE);
 				define('ZENCACHE_ALLOWED', FALSE);
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+				$post_id = (integer)$request_args;
 
 				status_header(200); // Return response.
 				nocache_headers(); // Disallow browser cache.
@@ -133,42 +114,16 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function record_stats_via_ajax($request_args)
 			{
-				$this->is_doing_ajax = TRUE;
-				$post_id             = (integer)$request_args;
-
 				define('DONOTCACHEPAGE', TRUE);
 				define('ZENCACHE_ALLOWED', FALSE);
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+				$post_id = (integer)$request_args;
 
 				status_header(200); // Return response.
 				nocache_headers(); // Disallow browser cache.
 				header('Content-Type: text/plain; charset=UTF-8');
 				exit((string)(integer)$this->plugin->utils_post->record_stats($post_id));
-			}
-
-			/**
-			 * Manual GitHub processor.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @param mixed $request_args Input argument(s).
-			 */
-			protected function github_processor_via_ajax($request_args)
-			{
-				$this->is_doing_ajax = TRUE;
-				$request_args        = NULL;
-
-				define('DONOTCACHEPAGE', TRUE);
-				define('ZENCACHE_ALLOWED', FALSE);
-
-				if(!current_user_can($this->plugin->cap))
-					return; // Unauthenticated; ignore.
-
-				new github_processor();
-
-				status_header(200); // Return response.
-				nocache_headers(); // Disallow browser cache.
-				header('Content-Type: text/plain; charset=UTF-8');
-				exit(__('GitHub processing complete.', $this->plugin->text_domain));
 			}
 		}
 	}

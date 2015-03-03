@@ -28,13 +28,6 @@ namespace wp_kb_articles // Root namespace.
 			protected $valid_actions;
 
 			/**
-			 * @var boolean Doing AJAX?
-			 *
-			 * @since 150302 Adding support for AJAX.
-			 */
-			protected $is_doing_ajax = FALSE;
-
-			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -53,21 +46,11 @@ namespace wp_kb_articles // Root namespace.
 					'import',
 					'export',
 
+					'github_reprocess',
+					'github_processor_via_ajax',
 					'github_connectivity_test_via_ajax',
 				);
 				$this->maybe_handle();
-			}
-
-			/**
-			 * Read-only access to `is_doing_ajax`.
-			 *
-			 * @since 150302 Adding support for AJAX.
-			 *
-			 * @return boolean `TRUE` if we are doing AJAX.
-			 */
-			public function is_doing_ajax()
-			{
-				return $this->is_doing_ajax;
 			}
 
 			/**
@@ -251,6 +234,66 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * GitHub reprocess.
+			 *
+			 * @since 150302 Adding GitHub reprocessor.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_reprocess($request_args)
+			{
+				$post_id = (integer)$request_args;
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				if(!current_user_can('edit_post', $post_id))
+					return; // Unauthenticated; ignore.
+
+				$this->plugin->utils_env->doing_redirect(TRUE);
+
+				nocache_headers(); // Disallow browser cache.
+
+				new github_reprocess($post_id); // Reprocess.
+
+				$notice_markup = sprintf(__('KB Article Synchronized with GitHub.', $this->plugin->text_domain), esc_html($post_id));
+				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
+
+				wp_redirect(get_edit_post_link($post_id, 'raw')).exit();
+			}
+
+			/**
+			 * GitHub processor via AJAX.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_processor_via_ajax($request_args)
+			{
+				$request_args = NULL; // Not used here.
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				new github_processor(); // Run one time-limited process.
+
+				exit(__('GitHub processing complete.', $this->plugin->text_domain));
+			}
+
+			/**
 			 * Tests GitHub connectivity.
 			 *
 			 * @since 150302 Adding GitHub connectivity tests.
@@ -261,13 +304,13 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$request_args = (array)$request_args;
 
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
 				if(!current_user_can($this->plugin->cap))
 					return; // Unauthenticated; ignore.
 
-				$this->is_doing_ajax = TRUE;
-
-				define('DONOTCACHEPAGE', TRUE);
-				define('ZENCACHE_ALLOWED', FALSE);
+				$this->plugin->utils_env->doing_ajax(TRUE);
 
 				status_header(200); // Return response.
 				nocache_headers(); // Disallow browser cache.
