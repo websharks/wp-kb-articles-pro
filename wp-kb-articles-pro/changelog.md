@@ -1,3 +1,9 @@
+= v150303 =
+
+* Adding GitHub connectivity test button.
+* Adding "Sync w/ GitHub" button to the KB Articles list.
+* Adding "Sync w/ GitHub" button to each KB Article in the post editing station.
+
 = v150201 =
 
 * Optimizing search functionality.
