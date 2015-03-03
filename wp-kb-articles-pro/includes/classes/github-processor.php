@@ -144,6 +144,11 @@ namespace wp_kb_articles // Root namespace.
 				$this->last_path               = $this->plugin->options['github_processor_last_path'];
 				$this->fast_forwarding         = $this->last_tree && $this->last_path;
 
+				if(!$this->plugin->utils_env->doing_ajax())
+					if(!$this->plugin->utils_env->doing_cron())
+						if(!$this->plugin->utils_env->doing_redirect())
+							return; // Stop; invalid context.
+
 				$this->prep_cron_job();
 				$this->prep_current_user();
 				$this->prep_wp_filters();
@@ -318,7 +323,7 @@ namespace wp_kb_articles // Root namespace.
 					$github_mirror = new github_mirror(
 						array_merge($article['headers'], array(
 							'path' => $path,
-							'sha'  => $file['sha'],
+							'sha'  => $article['sha'],
 							'body' => $article['body'],
 						)));
 					$this->processed_files_counter++; // Bump the counter.
@@ -331,7 +336,7 @@ namespace wp_kb_articles // Root namespace.
 					$github_mirror = new github_mirror(
 						array_merge($article['headers'], array(
 							'path' => $path,
-							'sha'  => $file['sha'],
+							'sha'  => $article['sha'],
 							'body' => $article['body'],
 						)));
 					$this->processed_files_counter++; // Bump the counter.

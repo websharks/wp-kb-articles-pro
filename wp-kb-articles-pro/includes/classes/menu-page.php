@@ -288,6 +288,10 @@ namespace wp_kb_articles // Root namespace.
 
 				                ' <p class="pmp-note pmp-notice">'.sprintf(__('With all of these settings configured, %1$s&trade; will begin to mirror your GitHub repo; pulling all <code>.md</code> and/or <code>.html</code> files from your repo into WordPress. See also: %2$s. The %1$s&trade; GitHub repo processor runs once every 15 minutes. It looks at the SHA1 hash of each article in your repo and compares this to articles in WordPress. If updates are necessary, changes will be pulled automatically and WordPress is updated to match your repo.', $this->plugin->text_domain), esc_html($this->plugin->name), $this->plugin->utils_markup->x_anchor('https://github.com/websharks/wp-kb-articles/wiki/YAML-Front-Matter-for-GitHub-Integration', __('YAML Front Matter', $this->plugin->text_domain))).'</p>'.
 
+				                ' <hr />'.
+
+				                ' <p><button type="button" class="pmp-github-connectivity-test pmp-left pmp-valign" style="font-size:120%;"><i class="fa fa-github"></i> Test GitHub Connectivity</button><i class="fa fa-info-circle"></i> '.sprintf(__('Clicking this button will run a quick test against the repo and credentials you\'ve entered above.', $this->plugin->text_domain), esc_html($this->plugin->name)).'</p>'.
+
 				                ' </table>'.
 
 				                '</div>';

@@ -518,6 +518,50 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Perform GitHub reprocessing.
+			 *
+			 * @since 150302 Adding GitHub reprocessing.
+			 *
+			 * @param integer     $post_id A post (article) ID.
+			 *
+			 * @param string|null $scheme Optional . Defaults to `admin`.
+			 *    See {@link set_scheme()} method for further details.
+			 *
+			 * @return string GitHub reprocessing URL.
+			 */
+			public function github_reprocess($post_id, $scheme = 'admin')
+			{
+				$post_id = (integer)$post_id; // Force integer.
+
+				if(!$this->plugin->utils_env->doing_ajax() // Don't use current AJAX URL here.
+				   && ($this->plugin->utils_env->is_menu_page('edit.php') || $this->plugin->utils_env->is_menu_page('post.php'))
+				) $url = $this->nonce(__NAMESPACE__, '', $scheme); // Use the current URL in this case.
+
+				else $url = $this->nonce(__NAMESPACE__, admin_url('/edit.php?post_type='.urlencode($this->plugin->post_type), $scheme));
+
+				$args = array(__NAMESPACE__ => array('github_reprocess' => $post_id));
+
+				return add_query_arg(urlencode_deep($args), $url);
+			}
+
+			/**
+			 * After GitHub reprocessing.
+			 *
+			 * @since 150302 Adding GitHub reprocessing.
+			 *
+			 * @param string|null $scheme Optional . Defaults to `admin`.
+			 *    See {@link set_scheme()} method for further details.
+			 *
+			 * @return string GitHub reprocessing complete URL.
+			 */
+			public function github_reprocessed($scheme = 'admin')
+			{
+				$url = $this->current($scheme);
+
+				return remove_query_arg(array(__NAMESPACE__, '_wpnonce'), $url);
+			}
+
+			/**
 			 * Template type updated URL.
 			 *
 			 * @since 150113 First documented version.

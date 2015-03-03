@@ -45,6 +45,10 @@ namespace wp_kb_articles // Root namespace.
 
 					'import',
 					'export',
+
+					'github_reprocess',
+					'github_processor_via_ajax',
+					'github_connectivity_test_via_ajax',
 				);
 				$this->maybe_handle();
 			}
@@ -227,6 +231,116 @@ namespace wp_kb_articles // Root namespace.
 					return; // Unauthenticated; ignore.
 
 				$exporter = new $class($request_args); // Instantiate.
+			}
+
+			/**
+			 * GitHub reprocess.
+			 *
+			 * @since 150302 Adding GitHub reprocessor.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_reprocess($request_args)
+			{
+				$post_id = (integer)$request_args;
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				if(!current_user_can('edit_post', $post_id))
+					return; // Unauthenticated; ignore.
+
+				if(!($post = get_post($post_id)))
+					return; // Post missing.
+
+				$this->plugin->utils_env->doing_redirect(TRUE);
+
+				nocache_headers(); // Disallow browser cache.
+
+				new github_reprocess($post->ID); // Reprocess.
+				$post = get_post($post_id); // After updates.
+
+				$notice_markup = // Construct confirmation notice markup.
+					'<i class="fa fa-github fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'. // Float this to the left side.
+					sprintf(__('KB Article ID: <code>%1$s</code> has been updated to what exists on the GitHub side', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
+					'<span style="opacity:0.5;"><i class="fa fa-level-up fa-rotate-90" style="margin:0 .25em 0 1em;"></i> Title: <em>'.sprintf(__('"%1$s"', $this->plugin->text_domain), esc_html($post->post_title)).'</em></span>';
+
+				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
+
+				wp_redirect($this->plugin->utils_url->github_reprocessed()).exit();
+			}
+
+			/**
+			 * GitHub processor via AJAX.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_processor_via_ajax($request_args)
+			{
+				$request_args = NULL; // Not used here.
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				new github_processor(); // Run one time-limited process.
+
+				exit(__('GitHub processing complete.', $this->plugin->text_domain));
+			}
+
+			/**
+			 * Tests GitHub connectivity.
+			 *
+			 * @since 150302 Adding GitHub connectivity tests.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_connectivity_test_via_ajax($request_args)
+			{
+				$request_args = (array)$request_args;
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				if(empty($request_args['owner']) || empty($request_args['repo']) || empty($request_args['branch'])
+				   || (empty($request_args['api_key']) && (empty($request_args['username']) && empty($request_args['password'])))
+				) exit (__('Test failed. Missing one or more config. options.', $this->plugin->text_domain));
+
+				$github_api = new github_api(
+					array(
+						'owner'    => $request_args['owner'],
+						'repo'     => $request_args['repo'],
+						'branch'   => $request_args['branch'],
+
+						'username' => !empty($request_args['username']) ? $request_args['username'] : '',
+						'password' => !empty($request_args['password']) ? $request_args['password'] : '',
+						'api_key'  => !empty($request_args['api_key']) ? $request_args['api_key'] : '',
+					));
+				if($github_api->test_connectivity())
+					exit(__('Success! Your GitHub configuration looks good.', $this->plugin->text_domain));
+				exit(__('Test failed. Please check your GitHub configuration options.', $this->plugin->text_domain));
 			}
 		}
 	}
