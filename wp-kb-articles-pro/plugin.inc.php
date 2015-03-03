@@ -800,7 +800,8 @@ namespace wp_kb_articles
 					$deps                           = array('jquery'); // Dependencies.
 					$github_readonly_content_enable = $this->options['github_readonly_content_enable']
 					                                  && $this->utils_github->enabled_configured()
-					                                  && isset($_REQUEST['post']) // May not have this.
+					                                  && $this->utils_env->is_menu_page('post.php')
+					                                  && isset($_REQUEST['post'], $_REQUEST['action'])
 					                                  && $this->utils_github->get_sha((integer)$_REQUEST['post']);
 
 					if($github_readonly_content_enable) // GitHub enabled/configured, and the content should be readonly?

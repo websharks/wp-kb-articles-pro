@@ -533,9 +533,11 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$post_id = (integer)$post_id; // Force integer.
 
-				if($this->plugin->utils_env->is_menu_page('edit.php') || $this->plugin->utils_env->is_menu_page('post.php'))
-					$url = $this->nonce(__NAMESPACE__, '', $scheme); // Use the current URL in this case.
-				else $url = $this->nonce(admin_url('/edit.php?post_type='.urlencode($this->plugin->post_type), $scheme));
+				if(!$this->plugin->utils_env->doing_ajax() // Don't use current AJAX URL here.
+				   && ($this->plugin->utils_env->is_menu_page('edit.php') || $this->plugin->utils_env->is_menu_page('post.php'))
+				) $url = $this->nonce(__NAMESPACE__, '', $scheme); // Use the current URL in this case.
+
+				else $url = $this->nonce(__NAMESPACE__, admin_url('/edit.php?post_type='.urlencode($this->plugin->post_type), $scheme));
 
 				$args = array(__NAMESPACE__ => array('github_reprocess' => $post_id));
 
