@@ -50,26 +50,23 @@ namespace wp_kb_articles // Root namespace.
 			 */
 			protected function run_handlers()
 			{
-				$this->from_v150113();
+				$this->from_lte_v150303();
 			}
 
 			/**
 			 * Runs upgrade handler for this specific version.
 			 *
-			 * @since 150117 Adding support for `github-issue:`.
+			 * @since 150304 Improving GitHub processor.
 			 */
-			protected function from_v150113()
+			protected function from_lte_v150303()
 			{
-				if(version_compare($this->prev_version, '150113', '>'))
+				if(version_compare($this->prev_version, '150303', '>'))
 					return; // Not applicable.
 
-				if(!($options = get_option(__NAMESPACE__.'_options')))
-					return; // Not applicable.
+				$options['github_processor_max_time']  = $this->plugin->default_options['github_processor_max_time'];
+				$options['github_processor_max_limit'] = $this->plugin->default_options['github_processor_max_limit'];
 
-				if(!isset($options['github_markdown_parse']))
-					return; // Not applicable.
-
-				$this->plugin->options_save(array('github_markdown_parse_enable' => $options['github_markdown_parse']));
+				$this->plugin->options_save($options); // Update to the defaults.
 			}
 		}
 	}

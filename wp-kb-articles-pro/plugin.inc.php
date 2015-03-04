@@ -204,7 +204,7 @@ namespace wp_kb_articles
 			 *
 			 * @var string Current version of the software.
 			 */
-			public $version = '150303';
+			public $version = '150304';
 
 			/*
 			 * Public Properties (Defined @ Setup)
@@ -381,6 +381,8 @@ namespace wp_kb_articles
 				$this->auto_recompile_cap = apply_filters(__METHOD__.'_auto_recompile_cap', 'activate_plugins');
 				$this->upgrade_cap        = apply_filters(__METHOD__.'_upgrade_cap', 'update_plugins');
 				$this->uninstall_cap      = apply_filters(__METHOD__.'_uninstall_cap', 'delete_plugins');
+
+				$max_execution_time = $this->utils_env->max_execution_time(); // Needed below.
 				/*
 				 * Setup the array of all plugin options.
 				 */
@@ -410,10 +412,13 @@ namespace wp_kb_articles
 					'github_markdown_parse_enable'                                     => '1', // `0|1`; enable?
 					'github_readonly_content_enable'                                   => '1', // `0|1`; enable?
 
-					'github_processor_max_time'                                        => '30', // In seconds.
+					'github_processor_max_time'                                        => (string)min(900, $max_execution_time), // In seconds.
+					'github_processor_max_limit'                                       => (string)floor((min(900, $max_execution_time) / 15) * 16), // Total files.
+					// ↑ This cannot exceed 1250 every 15 minutes; i.e., no more than 5000 per hour. See: <https://developer.github.com/v3/#rate-limiting>
+					//       Since there are tree calls, and also blob calls, this needs to be well within that maximum at all times.
+					//       The current maximum is `(900 / 15) * 16 = 960` every 15 minutes. That's a max of 3840 per hour.
 					'github_processor_delay'                                           => '250', // In milliseconds.
-					'github_processor_max_limit'                                       => '100', // Total files.
-					'github_processor_realtime_max_limit'                              => '5', // Total files.
+					'github_processor_button_enable'                                   => '0', // `0|1`; enable?
 
 					'github_processor_last_tree'                                       => '', // Last tree (or sub-tree).
 					'github_processor_last_path'                                       => '', // Last directory/file path.
@@ -797,11 +802,15 @@ namespace wp_kb_articles
 				            && $_REQUEST['action'] === 'edit' && get_post_type((integer)$_REQUEST['post']) === $this->post_type)
 				) // If we are editing one or more posts, and if the the post type indicates it's a KB article.
 				{
-					$deps                           = array('jquery'); // Dependencies.
-					$github_readonly_content_enable = $this->options['github_readonly_content_enable']
-					                                  && $this->utils_github->enabled_configured()
-					                                  && $this->utils_env->is_menu_page('post.php')
-					                                  && isset($_REQUEST['post'], $_REQUEST['action'])
+					$deps = array('jquery'); // Dependencies.
+
+					$github_enabled_configured = $this->utils_github->enabled_configured();
+
+					$github_processesor_button_enable = $github_enabled_configured && $this->options['github_processor_button_enable']
+					                                    && $this->utils_env->is_menu_page('edit.php') && current_user_can($this->cap);
+
+					$github_readonly_content_enable = !$github_processesor_button_enable && $github_enabled_configured && $this->options['github_readonly_content_enable']
+					                                  && $this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
 					                                  && $this->utils_github->get_sha((integer)$_REQUEST['post']);
 
 					if($github_readonly_content_enable) // GitHub enabled/configured, and the content should be readonly?
@@ -812,10 +821,14 @@ namespace wp_kb_articles
 					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_vars', array(
 						'pluginUrl'                   => rtrim($this->utils_url->to('/'), '/'),
 						'ajaxEndpoint'                => rtrim($this->utils_url->page_nonce_only(), '/'),
-						'gitHubReadonlyContentEnable' => $github_readonly_content_enable,
+
+						'githubProcessorButtonEnable' => $github_processesor_button_enable,
+						'githubReadonlyContentEnable' => $github_readonly_content_enable,
 					));
 					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_i18n', array(
-						'gitHubReadonlyContentEnabled' => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying <a href="%2$s" target="_blank">GitHub Integration</a>.', $this->text_domain), esc_html($this->name), esc_attr($this->utils_url->main_menu_page_only())),
+						'githubProcessorButtonText'         => sprintf(__('Run GitHub Processor (Force Update)', $this->text_domain)),
+						'githubProcessorButtonTextComplete' => sprintf(__('GitHub Processing Complete (reloading...)', $this->text_domain)),
+						'githubReadonlyContentEnabled'      => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying <a href="%2$s" target="_blank">GitHub Integration</a>.', $this->text_domain), esc_html($this->name), esc_attr($this->utils_url->main_menu_page_only())),
 					));
 				}
 			}

@@ -1,4 +1,4 @@
-= v150303 =
+= v150304 =
 
 * Adding GitHub connectivity test button.
 * Adding "Sync w/ GitHub" button to the KB Articles list.

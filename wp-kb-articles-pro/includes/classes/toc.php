@@ -160,7 +160,7 @@ namespace wp_kb_articles // Root namespace.
 						$crc32b     = hash('crc32b', strtolower($heading));
 						$headings[] = compact('size', 'heading', 'crc32b');
 
-						return '<a id="'.esc_attr('toc-'.$crc32b).'"></a>'."\n".$m[0];
+						return '<a id="'.esc_attr('toc-'.$crc32b).'" style="display:block;"></a>'."\n".$m[0];
 					}, $output['markup']); // Excluding pre/code via tokens.
 
 					if(strpos($output['markup'], '%%toc-md-pc-token-') !== FALSE) // Has MD pre/code token(s)?
@@ -181,7 +181,7 @@ namespace wp_kb_articles // Root namespace.
 						$crc32b     = hash('crc32b', strtolower($heading));
 						$headings[] = compact('size', 'heading', 'crc32b');
 
-						return '<a id="'.esc_attr('toc-'.$crc32b).'"></a>'."\n".$m[0];
+						return '<a id="'.esc_attr('toc-'.$crc32b).'" style="display:block;"></a>'."\n".$m[0];
 					}, $output['markup']); // Pure HTML markup in this case.
 				}
 				if(!$headings) // Do we have headings to iterate now?

@@ -265,7 +265,7 @@ namespace wp_kb_articles // Root namespace.
 
 				$notice_markup = // Construct confirmation notice markup.
 					'<i class="fa fa-github fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'. // Float this to the left side.
-					sprintf(__('KB Article ID: <code>%1$s</code> has been updated to what exists on the GitHub side', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
+					sprintf(__('KB Article ID: <code>%1$s</code> has been synced with GitHub.', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
 					'<span style="opacity:0.5;"><i class="fa fa-level-up fa-rotate-90" style="margin:0 .25em 0 1em;"></i> Title: <em>'.sprintf(__('"%1$s"', $this->plugin->text_domain), esc_html($post->post_title)).'</em></span>';
 
 				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
@@ -298,7 +298,7 @@ namespace wp_kb_articles // Root namespace.
 
 				new github_processor(); // Run one time-limited process.
 
-				exit(__('GitHub processing complete.', $this->plugin->text_domain));
+				exit(__('GitHub processing complete!', $this->plugin->text_domain));
 			}
 
 			/**
