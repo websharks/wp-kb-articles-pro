@@ -260,6 +260,9 @@ namespace wp_kb_articles // Root namespace.
 
 				nocache_headers(); // Disallow browser cache.
 
+				$current_user_id = get_current_user_id();
+				// This changes during processing.
+
 				new github_reprocess($post->ID); // Reprocess.
 				$post = get_post($post_id); // After updates.
 
@@ -268,7 +271,7 @@ namespace wp_kb_articles // Root namespace.
 					sprintf(__('KB Article ID: <code>%1$s</code> has been synced with GitHub.', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
 					'<span style="opacity:0.5;"><i class="fa fa-level-up fa-rotate-90" style="margin:0 .25em 0 1em;"></i> Title: <em>'.sprintf(__('"%1$s"', $this->plugin->text_domain), esc_html($post->post_title)).'</em></span>';
 
-				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
+				$this->plugin->enqueue_user_notice($notice_markup, array('for_user_id' => $current_user_id, 'transient' => TRUE));
 
 				wp_redirect($this->plugin->utils_url->github_reprocessed()).exit();
 			}
@@ -296,6 +299,9 @@ namespace wp_kb_articles // Root namespace.
 				nocache_headers(); // Disallow browser cache.
 				header('Content-Type: text/plain; charset=UTF-8');
 
+				$current_user_id = get_current_user_id();
+				// This changes during processing.
+
 				new github_processor(); // Run one time-limited process.
 
 				$notice_markup = // Construct confirmation notice markup.
@@ -303,7 +309,7 @@ namespace wp_kb_articles // Root namespace.
 					__('You forced an update by running the GitHub Processor manually.', $this->plugin->text_domain).'<br />'.
 					'<span style="opacity:0.5;">'.__('If you don\'t see the changes you desire, please run it a second or third time.', $this->plugin->text_domain).'</span>';
 
-				$this->plugin->enqueue_user_notice($notice_markup, array('transient' => TRUE));
+				$this->plugin->enqueue_user_notice($notice_markup, array('for_user_id' => $current_user_id, 'transient' => TRUE));
 
 				exit('1'); // Stop here. The JavaScript caller is expected to handle things from here.
 			}
