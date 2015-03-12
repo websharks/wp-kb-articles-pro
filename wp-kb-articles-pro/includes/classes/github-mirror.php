@@ -285,6 +285,11 @@ namespace wp_kb_articles // Root namespace.
 				if(!($this->sha = trim((string)$this->args['sha'])))
 					throw new \exception(__('Missing sha.', $this->plugin->text_domain));
 
+				foreach(array('toc_enable') as $_boolean_arg)
+					if($this->args[$_boolean_arg] === FALSE)
+						$this->args[$_boolean_arg] = 'false';
+				unset($_boolean_arg); // Housekeeping.
+
 				$this->issue = trim((string)$this->args['issue']);
 
 				$this->slug  = trim((string)$this->args['slug']);
