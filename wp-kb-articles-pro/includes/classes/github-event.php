@@ -147,13 +147,13 @@ namespace wp_kb_articles // Root namespace.
 
 						$commit = $this->payload->commits[0]; // First and only commit.
 
-						if(empty($commit->modified) || !is_array($commit->modified))
-							break; // Stop here; no file modified in this commit.
+						if(!empty($commit->added) && is_array($commit->added)
+						   && count($commit->added) === 1 && !empty($commit->added[0])
+						) $this->maybe_process_file($commit->added[0]);
 
-						if(count($commit->modified) !== 1 || empty($commit->modified[0]))
-							break; // Only handle one-commit, one-file push events.
-
-						$this->maybe_process_file($commit->modified[0]);
+						else if(!empty($commit->modified) && is_array($commit->modified)
+						        && count($commit->modified) === 1 && !empty($commit->modified[0])
+						) $this->maybe_process_file($commit->modified[0]);
 
 						break; // Break switch handler.
 				}
