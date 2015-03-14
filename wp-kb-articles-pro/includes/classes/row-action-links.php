@@ -59,7 +59,7 @@ namespace wp_kb_articles // Root namespace.
 					  __('<i class="fa fa-github"></i> Sync', $this->plugin->text_domain).
 					  '</a>';
 				$actions[__NAMESPACE__.'_github_edit']
-					= '<a href="'.esc_attr($this->plugin->utils_github->repo_edit_url($post->ID)).'" target="_blank">'.
+					= '<a href="'.esc_attr($this->plugin->utils_github->repo_edit_url($post->ID)).'">'.
 					  __('<i class="fa fa-github"></i> Edit', $this->plugin->text_domain).
 					  '</a>';
 				return $actions; // Filtered actions.
