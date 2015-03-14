@@ -461,7 +461,12 @@ namespace wp_kb_articles // Root namespace.
 					if(strcasecmp($_SERVER['HTTP_HOST'], $url['host']) === 0)
 						return $m[0]; // Not applicable.
 
-					if(!($path = wp_check_filetype(basename($url['path']))))
+					$fragment_ext = ''; // Initialize fragment-based extension.
+					if(!empty($url['fragment']) && strpos($url['fragment'], '.') === 0)
+						if(in_array($url['fragment'], array('.png', '.jpg', '.jpeg', '.gif'), TRUE))
+							$fragment_ext = $url['fragment']; // e.g., `.png`, `.jpg`, `.gif`.
+
+					if(!($path = wp_check_filetype(basename($url['path']).$fragment_ext)))
 						return $m[0]; // Not possible.
 
 					if(empty($path['ext']) || empty($path['type']))
