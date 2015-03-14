@@ -427,7 +427,8 @@ namespace wp_kb_articles // Root namespace.
 							'compare' => 'EXISTS', 'type' => 'SIGNED',
 						),
 					),
-					'ignore_sticky_posts' => $this->attr->author || $this->attr->tag || $this->attr->q,
+					'ignore_sticky_posts' => $this->attr->author || $this->attr->category_no_tp || $this->attr->tag
+					                         || $this->is_trending || $this->is_popular || $this->attr->q,
 				);
 				if($this->attr->author)
 				{
