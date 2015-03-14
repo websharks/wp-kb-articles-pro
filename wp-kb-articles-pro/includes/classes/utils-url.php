@@ -562,6 +562,24 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Perform GitHub event processing.
+			 *
+			 * @since 150313 Adding GitHub event handler.
+			 *
+			 * @param string|null $scheme Optional. Defaults to a `NULL` value.
+			 *    See {@link set_scheme()} method for further details.
+			 *
+			 * @return string GitHub event handler URL.
+			 */
+			public function github_event($scheme = 'admin')
+			{
+				$url  = home_url('/', $scheme); // Front-side action URL.
+				$args = array(__NAMESPACE__ => array('github_event' => $this->plugin->utils_github->event_key()));
+
+				return add_query_arg(urlencode_deep($args), $url);
+			}
+
+			/**
 			 * Template type updated URL.
 			 *
 			 * @since 150113 First documented version.

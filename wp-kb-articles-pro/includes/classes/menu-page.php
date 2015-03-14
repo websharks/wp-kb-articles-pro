@@ -303,6 +303,19 @@ namespace wp_kb_articles // Root namespace.
 				                '    </tbody>'.
 				                ' </table>'.
 
+				                ' <table style="margin-bottom:0;">'.
+				                '    <tbody>'.
+				                $form_fields->input_row(
+					                array(
+						                'label'         => __('Enable Automatic GitHub Event Handling w/ this Payload URL:', $this->plugin->text_domain),
+						                'name'          => '___github_event_url', // Not applicable here.
+						                'other_attrs'   => 'readonly="readonly" disabled="disabled"', // Read only value at all times.
+						                'current_value' => $this->plugin->utils_url->github_event(), // Front-side action URL w/ secret event key.
+						                'notes_after'   => '<p>'.sprintf(__('<strong>Optional.</strong> If you want <strong>push</strong> events at GitHub to automatically trigger article updates on the WordPress side (i.e., without needing to wait for CRON or manual processing), you can take the URL shown here and use it to %1$s on the GitHub side. The URL (in the field above) is your Payload URL. Please tell GitHub to send the Payload to this URL, with <code>Content-Type: application/json</code>. Also, please tell GitHub to send <em>everything</em> when you %1$s.', $this->plugin->text_domain), $this->plugin->utils_markup->x_anchor('https://developer.github.com/webhooks/creating/', __('create a Webhook', $this->plugin->text_domain))).'</p>',
+					                )).
+				                '    </tbody>'.
+				                ' </table>'.
+
 				                ' <hr />'.
 
 				                ' <p class="pmp-note pmp-notice">'.sprintf(__('With all of these settings configured, %1$s&trade; will begin to mirror your GitHub repo; pulling all <code>.md</code> and/or <code>.html</code> files from your repo into WordPress. See also: %2$s. The %1$s&trade; GitHub repo processor runs once every 15 minutes. It looks at the SHA1 hash of each article in your repo and compares this to articles in WordPress. If updates are necessary, changes will be pulled automatically and WordPress is updated to match your repo.', $this->plugin->text_domain), esc_html($this->plugin->name), $this->plugin->utils_markup->x_anchor('https://github.com/websharks/wp-kb-articles/wiki/YAML-Front-Matter-for-GitHub-Integration', __('YAML Front Matter', $this->plugin->text_domain))).'</p>'.

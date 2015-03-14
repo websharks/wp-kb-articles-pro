@@ -49,10 +49,8 @@ namespace wp_kb_articles // Root namespace.
 				$this->post_id = (integer)$post_id;
 				$this->force   = (boolean)$force;
 
-				if(!$this->plugin->utils_env->doing_ajax())
-					if(!$this->plugin->utils_env->doing_cron())
-						if(!$this->plugin->utils_env->doing_redirect())
-							return; // Stop; invalid context.
+				if(!$this->plugin->utils_env->doing_exit())
+					return; // Stop; invalid context.
 
 				$this->prep_current_user();
 				$this->prep_wp_filters();

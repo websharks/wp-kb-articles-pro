@@ -674,6 +674,16 @@ namespace wp_kb_articles // Root namespace.
 			{
 				return (boolean)preg_match('/^[0-9a-f]{40}$/i', (string)$string);
 			}
+
+			/**
+			 * Signed API event key.
+			 *
+			 * @return string Signed API event key.
+			 */
+			public function event_key()
+			{
+				return $this->plugin->utils_enc->hmac_sha256_sign(home_url('/'));
+			}
 		}
 	}
 }

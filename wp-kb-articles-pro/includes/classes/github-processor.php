@@ -144,10 +144,8 @@ namespace wp_kb_articles // Root namespace.
 				$this->last_path               = $this->plugin->options['github_processor_last_path'];
 				$this->fast_forwarding         = $this->last_tree && $this->last_path;
 
-				if(!$this->plugin->utils_env->doing_ajax())
-					if(!$this->plugin->utils_env->doing_cron())
-						if(!$this->plugin->utils_env->doing_redirect())
-							return; // Stop; invalid context.
+				if(!$this->plugin->utils_env->doing_exit())
+					return; // Stop; invalid context.
 
 				$this->prep_cron_job();
 				$this->prep_current_user();

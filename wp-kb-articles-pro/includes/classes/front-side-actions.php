@@ -40,6 +40,7 @@ namespace wp_kb_articles // Root namespace.
 					'sc_list_via_ajax',
 					'cast_popularity_vote_via_ajax',
 					'record_stats_via_ajax',
+					'github_event',
 				);
 				$this->maybe_handle();
 			}
@@ -124,6 +125,29 @@ namespace wp_kb_articles // Root namespace.
 				nocache_headers(); // Disallow browser cache.
 				header('Content-Type: text/plain; charset=UTF-8');
 				exit((string)(integer)$this->plugin->utils_post->record_stats($post_id));
+			}
+
+			/**
+			 * Handle GitHub events.
+			 *
+			 * @since 150313 Adding GitHub event handler.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function github_event($request_args)
+			{
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				$this->plugin->utils_env->doing_exit(TRUE);
+				$event_key = (string)$request_args;
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				new github_event($event_key); // Handle.
+				exit(); // Exit script after event processing.
 			}
 		}
 	}
