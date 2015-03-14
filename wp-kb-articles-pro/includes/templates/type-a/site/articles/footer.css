@@ -77,6 +77,17 @@
   float: left;
   margin: 0 .25em 0 0;
 }
+.wp_kb_articles-footer > .-meta > .-popularity-tags-feedback > .-feedback > .-edit {
+  margin: 0 0 0 1em;
+  display: inline-block;
+}
+.wp_kb_articles-footer > .-meta > .-popularity-tags-feedback > .-feedback > .-edit::before {
+  content: '\f092';
+  font-family: FontAwesome;
+  -webkit-font-smoothing: antialiased;
+  float: left;
+  margin: 0 .25em 0 0;
+}
 .wp_kb_articles-footer > .-meta > .-author-popularity {
   font-size: 90%;
 }
