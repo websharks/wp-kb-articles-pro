@@ -13,6 +13,9 @@
 			[if github_enabled_configured && github_issue_feedback_enable]
 				<div class="-feedback">
 					How can we <a href="[github_issue_url]">improve this article</a>?
+					[if current_user_can_edit]
+						<span class="-edit">[<a href="[github_repo_edit_url]">edit</a>]</span>
+					[endif]
 				</div>
 			[endif]
 		</div>

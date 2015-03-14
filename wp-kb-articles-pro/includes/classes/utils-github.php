@@ -289,6 +289,28 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Gets edit URL for an article.
+			 *
+			 * @since 150313 Adding ability to edit files on GitHub.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string Edit URL for an article.
+			 */
+			public function get_repo_edit_url($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				if(!($path = $this->get_path($post_id)))
+					return ''; // Not possible.
+
+				$edit_url = $this->repo_url().'/edit/'.urlencode($this->plugin->options['github_mirror_branch']).'/'.$path;
+
+				return $edit_url; // GitHub URL for editing the file.
+			}
+
+			/**
 			 * Gets TOC-enable value for an article.
 			 *
 			 * @since 150118 Adding TOC generation.
