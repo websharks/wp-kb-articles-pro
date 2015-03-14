@@ -297,7 +297,7 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @return string Edit URL for an article.
 			 */
-			public function get_repo_edit_url($post_id)
+			public function repo_edit_url($post_id)
 			{
 				if(!($post_id = (integer)$post_id))
 					return ''; // Not possible.

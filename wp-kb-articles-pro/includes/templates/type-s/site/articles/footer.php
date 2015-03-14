@@ -48,7 +48,7 @@ echo $template->snippet(
 
 	'[tags]'                       => $_tags, // Contains raw HTML markup.
 	'[github_issue_url]'           => esc_attr($plugin->utils_github->get_issue_url($post->ID, TRUE)),
-	'[github_repo_edit_url]'       => esc_attr($plugin->utils_github->get_repo_edit_url($post->ID)),
+	'[github_repo_edit_url]'       => esc_attr($plugin->utils_github->repo_edit_url($post->ID)),
 
 	'[comments_number_text]'       => esc_html(get_comments_number_text()),
 	'[date]'                       => esc_html(get_the_date()),

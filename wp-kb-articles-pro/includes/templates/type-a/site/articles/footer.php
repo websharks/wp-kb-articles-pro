@@ -38,7 +38,7 @@ namespace wp_kb_articles;
 				<div class="-feedback">
 					<?php echo sprintf(__('How can we <a href="%1$s">improve this article</a>?', $plugin->text_domain), esc_attr($plugin->utils_github->get_issue_url($post->ID, TRUE))); ?>
 					<?php if(current_user_can('edit_post', $post->ID)): ?>
-						<span class="-edit">[<?php echo sprintf(__('<a href="%1$s">edit</a>', $plugin->text_domain), esc_attr($plugin->utils_github->get_repo_edit_url($post->ID))); ?>]</span>
+						<span class="-edit">[<?php echo sprintf(__('<a href="%1$s">edit</a>', $plugin->text_domain), esc_attr($plugin->utils_github->repo_edit_url($post->ID))); ?>]</span>
 					<?php endif; ?>
 				</div>
 			<?php endif; ?>

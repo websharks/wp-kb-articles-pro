@@ -56,7 +56,11 @@ namespace wp_kb_articles // Root namespace.
 					return; // Not applicable.
 
 				echo '<a href="'.esc_attr($this->plugin->utils_url->github_reprocess($post->ID)).'" class="'.esc_attr($this->plugin->slug).'-github-reprocess-button button button-small">'.
-				     __('Sync w/ GitHub', $this->plugin->text_domain).
+				     __('<i class="fa fa-github"></i> Sync', $this->plugin->text_domain).
+				     '</a>';
+
+				echo '<a href="'.esc_attr($this->plugin->utils_github->repo_edit_url($post->ID)).'" target="_blank" class="'.esc_attr($this->plugin->slug).'-github-edit-button button button-small">'.
+				     __('<i class="fa fa-github"></i> Edit', $this->plugin->text_domain).
 				     '</a>';
 			}
 		}
