@@ -348,6 +348,7 @@ namespace wp_kb_articles // Root namespace.
 
 				$url = 'raw.githubusercontent.com/%1$s/%2$s/%3$s/%4$s';
 				$url = sprintf($url, $this->owner, $this->repo, $this->branch, $path);
+				$url .= '?no_cache='.urlencode(uniqid());
 
 				if(($response = $this->get_response($url)))
 					return $response['body'];
