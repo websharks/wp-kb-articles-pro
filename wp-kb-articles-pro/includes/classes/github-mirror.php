@@ -232,7 +232,7 @@ namespace wp_kb_articles // Root namespace.
 					'tags'           => '', // Comma-delimited list.
 
 					'author'         => '', // `1`, or `johndoe` (ID or username).
-					'status'         => '', // `draft`, `pending`, `publish`, `future`, etc.
+					'status'         => '', // `draft`, `pending`, `pending-via-github`, `publish`, `future`.
 					'pubdate'        => '', // `strtotime()` compatible.
 
 					'body'           => '', // Article body content.
@@ -329,7 +329,7 @@ namespace wp_kb_articles // Root namespace.
 						$this->author = $this->plugin->options['github_mirror_author'];
 
 					if(!$this->status) // Default status.
-						$this->status = 'pending'; // Pending review.
+						$this->status = 'pending-via-github';
 
 					if(!$this->pubdate) // Use the current time.
 						$this->pubdate = 'now'; // `strtotime()` compatible.

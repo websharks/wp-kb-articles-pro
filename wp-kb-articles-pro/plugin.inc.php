@@ -1577,6 +1577,29 @@ namespace wp_kb_articles
 				);
 				register_post_type($this->post_type, $post_type_args);
 
+				$github_pending_post_status_args = array(
+					'show_in_admin_all_list'    => TRUE,
+					'show_in_admin_status_list' => TRUE,
+					'public'                    => FALSE,
+					'protected'                 => TRUE,
+					'private'                   => TRUE,
+					'exclude_from_search'       => FALSE,
+					'label'                     => __('Pending (via GitHub)', $this->text_domain),
+					'label_count'               => _n_noop('Pending (via GitHub) <span class="count">(%s)</span>', 'Pending (via GitHub) <span class="count">(%s)</span>'),
+				);
+				if($this->utils_github->enabled_configured()) // Using GitHub integration?
+				{
+					register_post_status('pending-via-github', $github_pending_post_status_args);
+					add_filter('display_post_states', function (array $states, \WP_Post $post) use ($github_pending_post_status_args)
+					{
+						if($post->post_status === 'pending-via-github')
+							if(empty($_REQUEST['post_status']) || $_REQUEST['post_status'] !== 'pending-via-github')
+								$states['pending-via-github'] = $github_pending_post_status_args['label'];
+
+						return $states; // Perhaps filtered by the routine above.
+
+					}, 10, 2); // Displayed in the list of KB articles.
+				}
 				$category_taxonomy_args = array // Categories.
 				(
 				                                'public'       => TRUE, 'show_admin_column' => TRUE,
