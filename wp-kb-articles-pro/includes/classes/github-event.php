@@ -177,6 +177,9 @@ namespace wp_kb_articles // Root namespace.
 				if(!($article = $this->github_api->retrieve_article($path)))
 					throw new \exception(__('Article retrieval failure.', $this->plugin->text_domain));
 
+				if($this->plugin->utils_github->is_path_excluded($path))
+					return; // Nothing to do; path is excluded.
+
 				$github_mirror = new github_mirror(
 					array_merge($article['headers'], array(
 						'path' => $path,

@@ -75,32 +75,6 @@ namespace wp_kb_articles // Root namespace.
 			protected $password;
 
 			/**
-			 * Supported file extensions.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @var array Supported file extensions.
-			 */
-			protected $supported_file_extensions = array('md', 'html');
-
-			/**
-			 * Excluded file basenames.
-			 *
-			 * @since 150113 First documented version.
-			 *
-			 * @var array Excluded file basenames.
-			 */
-			protected $excluded_file_basenames = array(
-				'readme',
-				'contributing',
-				'changelog',
-				'changes',
-				'license',
-				'package',
-				'index',
-			);
-
-			/**
 			 * Class constructor.
 			 *
 			 * @since 150113 First documented version.
@@ -160,26 +134,16 @@ namespace wp_kb_articles // Root namespace.
 
 				foreach($tree['tree'] as $_tree_blob)
 				{
-					$_extension = $this->plugin->utils_fs->extension($_tree_blob['path']);
-					$_basename  = basename($_tree_blob['path'], $_extension ? '.'.$_extension : NULL);
+					if($_tree_blob['type'] === 'blob') // i.e., NOT a directory.
+						if($this->plugin->utils_github->is_path_excluded($_tree_blob['path']))
+							continue; // Exclude this path please.
 
-					if(strpos($_basename, '.') === 0) // Exclude?
-						continue; // Exlude dot dirs/files.
-
-					if($_tree_blob['type'] === 'blob') // i.e., not a directory.
-					{
-						if(!in_array($_extension, $this->supported_file_extensions, TRUE))
-							continue; // Not a supported file extension.
-
-						if(in_array(strtolower($_basename), $this->excluded_file_basenames, TRUE))
-							continue; // Auto-exclude these basenames.
-					}
 					$trees_blobs[$_tree_blob['path']] = array(
 						'sha'  => $_tree_blob['sha'],
 						'type' => $_tree_blob['type'],
 					);
 				}
-				unset($_tree_blob, $_extension, $_basename); // Housekeeping.
+				unset($_tree_blob); // Housekeeping.
 
 				return $trees_blobs; // Array of all sub-trees and article blobs.
 			}
