@@ -275,6 +275,9 @@ namespace wp_kb_articles // Root namespace.
 				if(!($this->path = trim((string)$this->args['path'])))
 					throw new \exception(__('Missing path.', $this->plugin->text_domain));
 
+				if($this->plugin->utils_github->is_path_excluded($this->path))
+					throw new \exception(__('Attempting to mirror excluded path.', $this->plugin->text_domain));
+
 				if(!($this->extension = $this->plugin->utils_fs->extension($this->path)))
 					throw new \exception(__('Missing extension.', $this->plugin->text_domain));
 

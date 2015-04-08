@@ -143,6 +143,46 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Is a given path to be excluded automatically?
+			 *
+			 * @since 150408 Improving exclusion detection.
+			 *
+			 * @param string $path Path to test; e.g., `/path/to/file.md`.
+			 *
+			 * @return boolean `TRUE` if the path is excluded.
+			 */
+			public function is_path_excluded($path)
+			{
+				if(!($path = trim((string)$path)))
+					return FALSE; // Not possible.
+
+				$excluded_file_basenames   = array(
+					'readme',
+					'contributing',
+					'changelog',
+					'changes',
+					'license',
+					'package',
+					'index',
+				);
+				$supported_file_extensions = array('md', 'html');
+
+				$extension = $this->plugin->utils_fs->extension($path);
+				$basename  = basename($path, $extension ? '.'.$extension : NULL);
+
+				if(strpos($basename, '.') === 0) // Exclude?
+					return TRUE; // Exlude dot dirs/files.
+
+				if(!in_array($extension, $supported_file_extensions, TRUE))
+					return TRUE; // Not a supported file extension.
+
+				if(in_array(strtolower($basename), $excluded_file_basenames, TRUE))
+					return TRUE; // Auto-exclude these basenames.
+
+				return FALSE; // Default return value.
+			}
+
+			/**
 			 * Gets content type for an article.
 			 *
 			 * @since 150214 Enhancing content/excerpt filters.
