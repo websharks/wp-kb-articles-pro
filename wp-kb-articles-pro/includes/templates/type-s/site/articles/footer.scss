@@ -111,6 +111,27 @@
 					float                  : left;
 					margin                 : 0 .25em 0 0;
 				}
+				& > .-edit
+				{
+					margin  : 0 0 0 1em;
+					display : inline-block;
+				}
+				& > .-edit::before
+				{
+					font-family            : FontAwesome;
+					-webkit-font-smoothing : antialiased;
+
+					float                  : left;
+					margin                 : 0 .25em 0 0;
+				}
+				& > .-edit.-github-edit::before
+				{
+					content : '\f092';
+				}
+				& > .-edit.-wp-edit::before
+				{
+					content : '\f19a';
+				}
 			}
 		}
 		& > .-author-popularity
