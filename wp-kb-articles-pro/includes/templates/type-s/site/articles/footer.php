@@ -31,6 +31,7 @@ echo $template->snippet(
 	'show_avatars'                 => get_option('show_avatars'),
 	'github_enabled_configured'    => $plugin->utils_github->enabled_configured(),
 	'github_issue_feedback_enable' => $plugin->options['github_issue_feedback_enable'],
+	'github_path_exists'           => $plugin->utils_github->get_path($post->ID),
 	'current_user_can_edit'        => current_user_can('edit_post', $post->ID),
 
 	'[namespace]'                  => esc_attr(__NAMESPACE__),
@@ -49,6 +50,7 @@ echo $template->snippet(
 	'[tags]'                       => $_tags, // Contains raw HTML markup.
 	'[github_issue_url]'           => esc_attr($plugin->utils_github->get_issue_url($post->ID, TRUE)),
 	'[github_repo_edit_url]'       => esc_attr($plugin->utils_github->repo_edit_url($post->ID)),
+	'[wp_edit_url]'                => esc_attr(get_edit_post_link($post->ID, 'raw')),
 
 	'[comments_number_text]'       => esc_html(get_comments_number_text()),
 	'[date]'                       => esc_html(get_the_date()),
