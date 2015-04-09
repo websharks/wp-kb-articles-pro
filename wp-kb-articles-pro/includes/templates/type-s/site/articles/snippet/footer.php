@@ -14,7 +14,11 @@
 				<div class="-feedback">
 					How can we <a href="[github_issue_url]">improve this article</a>?
 					[if current_user_can_edit]
-						<span class="-edit">[<a href="[github_repo_edit_url]">edit</a>]</span>
+						[if github_path_exists]
+							<span class="-edit -github-edit">[<a href="[github_repo_edit_url]">edit</a>]</span>
+						[else]
+							<span class="-edit -wp-edit">[<a href="[wp_edit_url]">edit</a>]</span>
+						[endif]
 					[endif]
 				</div>
 			[endif]

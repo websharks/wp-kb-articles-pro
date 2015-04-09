@@ -82,11 +82,16 @@
   display: inline-block;
 }
 .wp_kb_articles-footer > .-meta > .-popularity-tags-feedback > .-feedback > .-edit::before {
-  content: '\f092';
   font-family: FontAwesome;
   -webkit-font-smoothing: antialiased;
   float: left;
   margin: 0 .25em 0 0;
+}
+.wp_kb_articles-footer > .-meta > .-popularity-tags-feedback > .-feedback > .-edit.-github-edit::before {
+  content: '\f092';
+}
+.wp_kb_articles-footer > .-meta > .-popularity-tags-feedback > .-feedback > .-edit.-wp-edit::before {
+  content: '\f19a';
 }
 .wp_kb_articles-footer > .-meta > .-author-popularity {
   font-size: 90%;

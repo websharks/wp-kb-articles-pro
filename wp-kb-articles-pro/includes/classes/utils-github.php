@@ -258,21 +258,29 @@ namespace wp_kb_articles // Root namespace.
 			 * @since 150117 Adding support for `github-issue:` in YAML config.
 			 *
 			 * @param integer $post_id WordPress post ID.
-			 * @param boolean $else_issues If the issue URL is not defined, return `/issues/`?
+			 * @param boolean $else_new Fallback on `/issues/new`?
 			 *
 			 * @return string Issue URL for the article.
 			 */
-			public function get_issue_url($post_id, $else_issues = FALSE)
+			public function get_issue_url($post_id, $else_new = FALSE)
 			{
 				if(!($post_id = (integer)$post_id))
 					return ''; // Not possible.
 
 				$issue_url = trim((string)get_post_meta($post_id, __NAMESPACE__.'_github_issue_url', TRUE));
 
-				if(!$issue_url && $else_issues) // Fallback on `/issues/`?
-					$issue_url = $this->repo_url().'/issues/';
+				if(!$issue_url && $else_new) // Fallback on `/issues/new`?
+				{
+					$post_title = get_the_title($post_id);
+					$post_url   = get_permalink($post_id);
 
-				return $issue_url; // Issue (or `/issues/`) URL.
+					$title = 're: '.$post_title;
+					$body  = $post_title."\n".$post_url."\n\n".'---'."\n\n";
+
+					$issue_url = $this->repo_url().'/issues/new';
+					$issue_url = add_query_arg(urlencode_deep(compact('title', 'body')), $issue_url);
+				}
+				return $issue_url ? $issue_url : '';
 			}
 
 			/**
