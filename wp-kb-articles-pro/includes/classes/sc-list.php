@@ -156,10 +156,10 @@ namespace wp_kb_articles // Root namespace.
 				if($this->attr->per_page > $upper_max_limit)
 					$this->attr->per_page = $upper_max_limit;
 
-				$_orderbys           = preg_split('/,+/', $this->attr->orderby, NULL, PREG_SPLIT_NO_EMPTY);
-				$_orderbys           = $this->plugin->utils_array->remove_emptys($this->plugin->utils_string->trim_deep($_orderbys));
+				$_orderbys            = preg_split('/,+/', $this->attr->orderby, NULL, PREG_SPLIT_NO_EMPTY);
+				$_orderbys            = $this->plugin->utils_array->remove_emptys($this->plugin->utils_string->trim_deep($_orderbys));
 				$this->attr->orderbys = $_orderbys; // Store these for use in template files.
-				$this->attr->orderby = array(); // Reset; convert to an associative array.
+				$this->attr->orderby  = array(); // Reset; convert to an associative array.
 				foreach($_orderbys as $_orderby) // Validate each orderby.
 				{
 					if(strpos($_orderby, ':', 1) === FALSE)
