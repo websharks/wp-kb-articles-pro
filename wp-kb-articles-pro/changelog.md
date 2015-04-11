@@ -1,3 +1,7 @@
+= v150411 =
+
+* Enhancing search functionality.
+
 = v150304 =
 
 * Adding GitHub connectivity test button.
