@@ -80,15 +80,18 @@ namespace wp_kb_articles // Root namespace.
 						$this->query->wp_query->the_post();
 						$_post = $GLOBALS['post'];
 
-						$_terms = get_the_terms($_post->ID, $this->plugin->post_type.'_tag');
-						$_terms = is_wp_error($_terms) ? array() : $_terms;
-
 						$_result = array(
 							'id'    => $_post->ID,
 							'title' => get_the_title(),
 							'url'   => get_permalink(),
 						);
 						if($this->args->expand)
+						{
+							$_tags  = array(); // Initialize.
+							$_terms = get_the_terms($_post->ID, $this->plugin->post_type.'_tag');
+							$_terms = is_wp_error($_terms) ? array() : $_terms;
+							foreach($_terms as $_term) $_tags[] = $_term->name;
+
 							$_result = array_merge($_result, array(
 								'author'    => get_the_author(),
 								'time'      => strtotime($_post->post_date_gmt),
@@ -100,10 +103,13 @@ namespace wp_kb_articles // Root namespace.
 
 								'snippet'   => !empty($this->query->results[$_post->ID]->snippet)
 									? $this->query->results[$_post->ID]->snippet : '',
+
+								'tags'      => $_tags, // Array of tag names.
 							));
+						}
 						$results[] = $_result; // Push this result onto the stack.
 					}
-				unset($_post, $_terms, $_result); // Housekeeping.
+				unset($_post, $_terms, $_result, $_tags, $_terms, $_term); // Housekeeping.
 
 				wp_reset_postdata(); // Request post globals now.
 
