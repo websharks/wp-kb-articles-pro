@@ -41,6 +41,7 @@ namespace wp_kb_articles // Root namespace.
 					'cast_popularity_vote_via_ajax',
 					'record_stats_via_ajax',
 					'github_event',
+					'query_api',
 				);
 				$this->maybe_handle();
 			}
@@ -147,6 +148,29 @@ namespace wp_kb_articles // Root namespace.
 				header('Content-Type: text/plain; charset=UTF-8');
 
 				new github_event($event_key); // Handle.
+				exit(); // Exit script after event processing.
+			}
+
+			/**
+			 * Handle query API calls.
+			 *
+			 * @since 150411 Adding query API.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function query_api($request_args)
+			{
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				$this->plugin->utils_env->doing_exit(TRUE);
+				$query_args = (array)$request_args;
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: application/json; charset=UTF-8');
+
+				new query_api($query_args); // Handle.
 				exit(); // Exit script after event processing.
 			}
 		}
