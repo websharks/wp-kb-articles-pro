@@ -93,6 +93,36 @@ namespace wp_kb_articles // Root namespace.
 			protected $wp_query;
 
 			/**
+			 * Default query args.
+			 *
+			 * @since 150410 Improving searches.
+			 *
+			 * @var array Default query args.
+			 */
+			public static $default_args = array(
+				'page'                        => 1, // Page number.
+				'per_page'                    => 25, // Cannot exceed max limit.
+
+				'orderby'                     => array(
+					'relevance'     => 'DESC', // By search relevance.
+					'popularity'    => 'DESC', // By article popularity/hearts.
+					'visits'        => 'DESC', // By total unique visitors.
+					'comment_count' => 'DESC', // By article comment count.
+					'date'          => 'DESC', // By article date.
+				),
+				'author'                      => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
+				'category'                    => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
+				'category_no_tp'              => array(), // For internal use only. Categories without trending or popular IDs.
+				'tag'                         => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
+				'q'                           => '', // Search query.
+
+				'trending_days'               => 7, // Number of days to use in trending calculation.
+				'snippet_before_after_length' => 45, // Before & after search term.
+
+				'strings'                     => array(), // For internal use only; args converted to strings.
+			);
+
+			/**
 			 * Class constructor.
 			 *
 			 * @since 150410 Improving searches.
@@ -105,26 +135,6 @@ namespace wp_kb_articles // Root namespace.
 
 				# Establish arguments.
 
-				$default_args = array(
-					'page'                        => 1, // Page number.
-					'per_page'                    => 25, // Cannot exceed max limit.
-
-					'orderby'                     => array(
-						'relevance'     => 'DESC', // By search relevance.
-						'popularity'    => 'DESC', // By article popularity/hearts.
-						'visits'        => 'DESC', // By total unique visitors.
-						'comment_count' => 'DESC', // By article comment count.
-						'date'          => 'DESC', // By article date.
-					),
-					'author'                      => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
-					'category'                    => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
-					'category_no_tp'              => array(), // For internal use only. Categories without trending or popular IDs.
-					'tag'                         => array(), // Satisfy all. Comma-delimited slugs/IDs; or an array of slugs/IDs.
-					'q'                           => '', // Search query.
-
-					'trending_days'               => 7, // Number of days to use in trending calculation.
-					'snippet_before_after_length' => 45, // Before & after search term.
-				);
 				if(isset($args['orderbys']) && !isset($args['orderby']))
 					$args['orderby'] = $args['orderbys'];
 
@@ -137,8 +147,8 @@ namespace wp_kb_articles // Root namespace.
 				if(isset($args['tags']) && !isset($args['tag']))
 					$args['tag'] = $args['tags'];
 
-				$args       = array_merge($default_args, $args);
-				$args       = array_intersect_key($args, $default_args);
+				$args       = array_merge(static::$default_args, $args);
+				$args       = array_intersect_key($args, static::$default_args);
 				$this->args = (object)$args; // Convert to object now.
 
 				# Collect trending/popular category IDs; if they exist on this site.
@@ -169,7 +179,7 @@ namespace wp_kb_articles // Root namespace.
 						list($_key, $_order) = explode(':', $_order, 2);
 					$_order = strtoupper($_order); // e.g. `ASC`, `DESC`.
 
-					if(!in_array($_key, array_keys($default_args['orderby']), TRUE))
+					if(!in_array($_key, array_keys(static::$default_args['orderby']), TRUE))
 						continue; // Invalid syntax; i.e., invalid orderby column key.
 
 					if(!in_array($_order, array('ASC', 'DESC'), TRUE))
@@ -178,7 +188,7 @@ namespace wp_kb_articles // Root namespace.
 					$this->args->orderby[$_key] = $_order;
 				}
 				unset($_orderby, $_key, $_order); // Housekeeping.
-				if(!$this->args->orderby) $this->args->orderby = $default_args['orderby'];
+				if(!$this->args->orderby) $this->args->orderby = static::$default_args['orderby'];
 
 				$this->args->author = !is_array($this->args->author) ? preg_split('/,+/', (string)$this->args->author, NULL, PREG_SPLIT_NO_EMPTY) : $this->args->author;
 				$this->args->author = $this->plugin->utils_array->remove_emptys($this->plugin->utils_string->trim_deep($this->args->author));
@@ -300,7 +310,7 @@ namespace wp_kb_articles // Root namespace.
 			{
 				$sql      = // Complex DB query that uses a custom fulltext-enabled index table.
 
-					"SELECT SQL_CALC_FOUND_ROWS `index`.`post_id`". // Columns/data.
+					"SELECT SQL_CALC_FOUND_ROWS `index`.`post_id` AS `post_id`". // Columns/data.
 
 					($this->args->q // Performing a search query?
 						? ", (". // Break these down to give each column different weights.
@@ -375,7 +385,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->pagination->found_rows  = (integer)$this->plugin->utils_db->wp->get_var("SELECT FOUND_ROWS()");
 				$this->pagination->total_pages = ceil($this->pagination->found_rows / $this->args->per_page);
 
-				$this->do_wp_query(); // Now do a WP query with the post ID we need for this page.
+				$this->do_wp_query(); // Now do a WP query with the post IDs we need for this page.
 			}
 
 			/**
