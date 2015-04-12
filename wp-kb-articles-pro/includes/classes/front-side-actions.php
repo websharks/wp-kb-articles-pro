@@ -169,6 +169,7 @@ namespace wp_kb_articles // Root namespace.
 				status_header(200); // Return response.
 				nocache_headers(); // Disallow browser cache.
 				header('Content-Type: application/json; charset=UTF-8');
+				header('Access-Control-Allow-Origin: *');
 
 				new query_api($query_args); // Handle.
 				exit(); // Exit script after event processing.
