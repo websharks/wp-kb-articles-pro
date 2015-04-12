@@ -423,6 +423,10 @@ namespace wp_kb_articles
 					'github_processor_last_tree'                                       => '', // Last tree (or sub-tree).
 					'github_processor_last_path'                                       => '', // Last directory/file path.
 
+					/* Related to search indexing. */
+
+					'index_rebuild_button_enable'                                      => '1', // `0|1`; enable?
+
 					/* Related to TOC generation. */
 
 					'toc_generation_enable'                                            => '1', // `0|1`; enable?
@@ -808,14 +812,14 @@ namespace wp_kb_articles
 				{
 					$deps = array('jquery'); // Dependencies.
 
-					$github_enabled_configured = $this->utils_github->enabled_configured();
+					$is_edit_page         = $this->utils_env->is_menu_page('edit.php');
+					$is_post_page         = !$is_edit_page && $this->utils_env->is_menu_page('post.php');
+					$current_user_can_cap = current_user_can($this->cap);
 
-					$github_processesor_button_enable = $github_enabled_configured && $this->options['github_processor_button_enable']
-					                                    && $this->utils_env->is_menu_page('edit.php') && current_user_can($this->cap);
-
-					$github_readonly_content_enable = !$github_processesor_button_enable && $github_enabled_configured && $this->options['github_readonly_content_enable']
-					                                  && $this->utils_env->is_menu_page('post.php') && isset($_REQUEST['post'], $_REQUEST['action'])
-					                                  && $this->utils_github->get_sha((integer)$_REQUEST['post']);
+					$github_enabled_configured        = $this->utils_github->enabled_configured();
+					$github_processesor_button_enable = $github_enabled_configured && $this->options['github_processor_button_enable'] && $is_edit_page && $current_user_can_cap;
+					$github_readonly_content_enable   = $github_enabled_configured && $this->options['github_readonly_content_enable'] && $is_post_page && $this->utils_github->get_path((integer)$_REQUEST['post']);
+					$index_rebuild_button_enable      = $this->options['index_rebuild_button_enable'] && $is_edit_page && $current_user_can_cap;
 
 					if($github_readonly_content_enable) // GitHub enabled/configured, and the content should be readonly?
 						add_filter('user_can_richedit', '__return_false'); // Disable the visual editor.
@@ -828,11 +832,16 @@ namespace wp_kb_articles
 
 						'githubProcessorButtonEnable' => $github_processesor_button_enable,
 						'githubReadonlyContentEnable' => $github_readonly_content_enable,
+
+						'indexRebuildButtonEnable'    => $index_rebuild_button_enable,
 					));
 					wp_localize_script(__NAMESPACE__.'-edit', __NAMESPACE__.'_edit_i18n', array(
-						'githubProcessorButtonText'         => sprintf(__('Run GitHub Processor (Force Update)', $this->text_domain)),
+						'githubProcessorButtonText'         => sprintf(__('Run GitHub Processor', $this->text_domain)),
 						'githubProcessorButtonTextComplete' => sprintf(__('GitHub Processing Complete (reloading...)', $this->text_domain)),
 						'githubReadonlyContentEnabled'      => sprintf(__('<strong>%1$s:</strong> The content of this article is read-only to avoid edits in WordPress that would be overwritten by the underlying <a href="%2$s" target="_blank">GitHub Integration</a>.', $this->text_domain), esc_html($this->name), esc_attr($this->utils_url->main_menu_page_only())),
+
+						'indexRebuildButtonText'            => sprintf(__('Rebuild Search Index', $this->text_domain)),
+						'indexRebuildButtonTextComplete'    => sprintf(__('Search Index Rebuilt (reloading...)', $this->text_domain)),
 					));
 				}
 			}

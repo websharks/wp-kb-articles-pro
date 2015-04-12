@@ -49,6 +49,8 @@ namespace wp_kb_articles // Root namespace.
 					'github_reprocess',
 					'github_processor_via_ajax',
 					'github_connectivity_test_via_ajax',
+
+					'index_rebuild_via_ajax',
 				);
 				$this->maybe_handle();
 			}
@@ -354,6 +356,43 @@ namespace wp_kb_articles // Root namespace.
 				if($github_api->test_connectivity())
 					exit(__('Success! Your GitHub configuration looks good.', $this->plugin->text_domain));
 				exit(__('Test failed. Please check your GitHub configuration options.', $this->plugin->text_domain));
+			}
+
+			/**
+			 * Reindex fulltext table via AJAX.
+			 *
+			 * @since 150411 Enhancing search functionality.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function index_rebuild_via_ajax($request_args)
+			{
+				$request_args = NULL; // Not used here.
+
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				if(!current_user_can($this->plugin->cap))
+					return; // Unauthenticated; ignore.
+
+				$this->plugin->utils_env->doing_ajax(TRUE);
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: text/plain; charset=UTF-8');
+
+				$index = new index(); // Index class instance.
+				$index->rebuild(); // Recreate the fulltext indexes.
+				$query = new query(array('per_page' => 1)); // Test query.
+
+				$notice_markup = // Construct confirmation notice markup.
+					'<i class="fa fa-database fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'.
+					__('Your MySQL fulltext search index has been regenerated successfully.', $this->plugin->text_domain).'<br />'.
+					'<span style="opacity:0.5;">'.sprintf(__('There are a total of <code>%1$s</code> KB articles in the index.', $this->plugin->text_domain), esc_html($query->pagination->total_results)).'</span>';
+
+				$this->plugin->enqueue_user_notice($notice_markup, array('for_user_id' => get_current_user_id(), 'transient' => TRUE));
+
+				exit('1'); // Stop here. The JavaScript caller is expected to handle things from here.
 			}
 		}
 	}
