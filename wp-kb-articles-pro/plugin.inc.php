@@ -534,7 +534,7 @@ namespace wp_kb_articles
 				add_filter('the_excerpt', array($this, 'maybe_preserve_article_raw_html_excerpt'), -PHP_INT_MAX, 1);
 				add_filter('the_excerpt', array($this, 'maybe_restore_article_raw_html_excerpt'), PHP_INT_MAX - 1, 1);
 
-				add_filter('the_content', array($this, 'article_toc'), PHP_INT_MAX, 1);
+				add_filter('the_content', array($this, 'article_headings'), PHP_INT_MAX, 1);
 				add_filter('the_content', array($this, 'article_footer'), PHP_INT_MAX, 1);
 
 				add_filter('author_link', array($this, 'sc_author_link'), 10, 3);
@@ -1468,24 +1468,24 @@ namespace wp_kb_articles
 			}
 
 			/**
-			 * Handle article table of contents.
+			 * Handle article headings/TOC.
 			 *
-			 * @since 150118 Adding TOC generation.
+			 * @since 150415 Enhancing TOC generation.
 			 *
 			 * @attaches-to `the_content` filter.
 			 *
 			 * @param string $content The content.
 			 *
-			 * @return string The original `$content` w/ possible TOC markup.
+			 * @return string With heading IDs and TOC (if enabled).
 			 */
-			public function article_toc($content)
+			public function article_headings($content)
 			{
 				if(!$GLOBALS['post'] || $GLOBALS['post']->post_type !== $this->post_type)
 					return $content; // Not applicable.
 
-				$toc = new toc(); // TOC class instance.
+				$headings = new headings(); // Headings class instance.
 
-				return $toc->filter($content); // With table of contents.
+				return $headings->filter($content); // With heading IDs.
 			}
 
 			/**
