@@ -1,8 +1,8 @@
 <?php
 /**
- * Article Table of Contents
+ * Article Headings
  *
- * @since 150113 First documented version.
+ * @since 150415 Enhancing TOC generation.
  * @copyright WebSharks, Inc. <http://www.websharks-inc.com>
  * @license GNU General Public License, version 3
  */
@@ -11,19 +11,19 @@ namespace wp_kb_articles // Root namespace.
 	if(!defined('WPINC')) // MUST have WordPress.
 		exit('Do NOT access this file directly: '.basename(__FILE__));
 
-	if(!class_exists('\\'.__NAMESPACE__.'\\toc'))
+	if(!class_exists('\\'.__NAMESPACE__.'\\headings'))
 	{
 		/**
-		 * Article Table of Contents
+		 * Article Headings
 		 *
-		 * @since 150113 First documented version.
+		 * @since 150415 Enhancing TOC generation.
 		 */
-		class toc extends abs_base
+		class headings extends abs_base
 		{
 			/**
 			 * Class constructor.
 			 *
-			 * @since 150113 First documented version.
+			 * @since 150415 Enhancing TOC generation.
 			 */
 			public function __construct()
 			{
@@ -33,7 +33,7 @@ namespace wp_kb_articles // Root namespace.
 			/**
 			 * Filters the content.
 			 *
-			 * @since 150118 Adding TOC generation.
+			 * @since 150415 Enhancing TOC generation.
 			 *
 			 * @param string $content Input markdown or raw HTML markup.
 			 *
@@ -47,23 +47,25 @@ namespace wp_kb_articles // Root namespace.
 				if(!$post || !is_singular($this->plugin->post_type))
 					return $content; // Not applicable.
 
-				$toc_enable = (string)get_post_meta($post->ID, __NAMESPACE__.'_toc_enable', TRUE);
-				$toc_enable = isset($toc_enable[0]) ? filter_var($toc_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
-
-				if(isset($toc_enable) && !$toc_enable)
-					return $content; // Not applicable.
-
-				if(!isset($toc_enable) && !$this->plugin->options['toc_generation_enable'])
-					return $content; // Not applicable.
-
 				if(!($tocify = $this->tocify($content)) || !$tocify['toc_markup'])
 					return $content; // Not possible.
 
-				$toc = $tocify['toc_markup']; // For template.
+				$toc_enable = (string)get_post_meta($post->ID, __NAMESPACE__.'_toc_enable', TRUE);
+				$toc_enable = isset($toc_enable[0]) ? filter_var($toc_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
 
-				$template_vars   = get_defined_vars();
-				$template        = new template('site/articles/toc.php');
-				$template_output = $template->parse($template_vars);
+				if(!isset($toc_enable) && stripos($tocify['markup'], '%%toc%%') !== FALSE)
+					$toc_enable = TRUE; // Content contains a replacement code.
+
+				if(!isset($toc_enable)) // Use default global setting?
+					$toc_enable = (boolean)$this->plugin->options['toc_generation_enable'];
+
+				if(!$toc_enable) // Heading IDs only?
+					return $tocify['markup'];
+
+				$toc                 = $tocify['toc_markup'];
+				$toc_template_vars   = get_defined_vars();
+				$toc_template        = new template('site/articles/toc.php');
+				$toc_template_output = $toc_template->parse($toc_template_vars);
 
 				$_this = $this; // Reference needed by closure.
 
@@ -96,7 +98,7 @@ namespace wp_kb_articles // Root namespace.
 
 					if(stripos($_spcsm['string'], '%%toc%%') !== FALSE)
 					{
-						$_spcsm['string'] = str_ireplace('%%toc%%', $template_output, $_spcsm['string']);
+						$_spcsm['string'] = str_ireplace('%%toc%%', $toc_template_output, $_spcsm['string']);
 						$tocify['markup'] = $this->plugin->utils_string->spcsm_restore($_spcsm);
 
 						return $tocify['markup']; // With `%%toc%%` now.
@@ -104,19 +106,19 @@ namespace wp_kb_articles // Root namespace.
 					unset($_tokenize_only, $_spcsm); // Housekeeping.
 				}
 				if(preg_match($embeds_regex_quick_check, $tocify['markup']))
-					return preg_replace_callback($embeds_regex, function ($m) use ($_this, $template_output)
+					return preg_replace_callback($embeds_regex, function ($m) use ($_this, $toc_template_output)
 					{
-						return $m[0]."\n".$template_output."\n"; // After embeds.
+						return $m[0]."\n".$toc_template_output."\n"; // After embeds.
 
 					}, $tocify['markup']);
 
-				return $template_output.$tocify['markup'];
+				return $toc_template_output.$tocify['markup'];
 			}
 
 			/**
 			 * Generates TOC markup.
 			 *
-			 * @since 150118 Adding TOC generation.
+			 * @since 150415 Enhancing TOC generation.
 			 *
 			 * @param string $md_html Input markdown or raw HTML markup.
 			 *
