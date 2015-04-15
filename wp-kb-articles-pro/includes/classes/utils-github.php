@@ -471,6 +471,38 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Filter images; link them up.
+			 *
+			 * @since 150415 Filtering image tags in body.
+			 *
+			 * @param string $body The body of a GitHub markdown/HTML file.
+			 *
+			 * @return string Filtered body of a GitHub markdown/HTML file.
+			 */
+			public function link_images_filter($body)
+			{
+				if(!($body = trim((string)$body)))
+					return $body; // Nothing to do.
+
+				$_this = $this; // Needed by closures below.
+				$spcsm = $this->plugin->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
+
+				$spcsm['string'] = preg_replace_callback('/\!\[[^\]]*?\]\((?P<src>[^)]+?)\)(?!\])/i', function ($m) use ($_this)
+				{
+					return '['.$m[0].']('.$m['src'].')'; // Linked Markdown image.
+
+				}, $spcsm['string']); // Filters images in Markdown syntax.
+
+				$spcsm['string'] = preg_replace_callback('/\<img\s(?:src\s*\=\s*|.*?\ssrc\s*\=\s*)(["\'])(?P<src>[^"\']+?)\\1[^\>]*?\>(?!\s*\<\/a\>)/i', function ($m) use ($_this)
+				{
+					return '<a href="'.$m['src'].'">'.$m[0].'</a>'; // Linked Markdown image.
+
+				}, $spcsm['string']); // Filters links in HTML anchor tags also.
+
+				return ($body = $this->plugin->utils_string->spcsm_restore($spcsm));
+			}
+
+			/**
 			 * Media library upload handler.
 			 *
 			 * @since 150227 Adding support for media library storage.
