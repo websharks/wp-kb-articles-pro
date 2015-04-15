@@ -679,10 +679,14 @@ namespace wp_kb_articles
 			 */
 			public function actions()
 			{
-				if(empty($_REQUEST[__NAMESPACE__]) && !empty($_SERVER['REQUEST_URI']))
-					if(stripos($_SERVER['REQUEST_URI'], '/'.$this->slug.'/api/query/') === 0)
-						$_REQUEST[__NAMESPACE__]['query_api'] = $_REQUEST;
+				if(empty($_REQUEST[__NAMESPACE__]))
+				{
+					$path = $this->utils_url->current_path();
 
+					if(stripos($path, '/'.$this->slug.'/api/') === 0) // Quick check, followed by a longer check.
+						if(preg_match('/^\/'.preg_quote($this->slug, '/').'\/api\/query(?:[\/?#]|$)/i', $path))
+							$_REQUEST[__NAMESPACE__]['query_api'] = $_REQUEST;
+				}
 				if(empty($_REQUEST[__NAMESPACE__]))
 					return; // Nothing to do here.
 
