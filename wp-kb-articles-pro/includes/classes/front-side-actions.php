@@ -164,6 +164,7 @@ namespace wp_kb_articles // Root namespace.
 				define('ZENCACHE_ALLOWED', FALSE);
 
 				$this->plugin->utils_env->doing_exit(TRUE);
+
 				$query_args = (array)$request_args;
 
 				status_header(200); // Return response.

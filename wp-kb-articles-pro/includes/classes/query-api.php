@@ -56,6 +56,9 @@ namespace wp_kb_articles // Root namespace.
 				$args         = array_merge($default_args, $args);
 				$args         = array_intersect_key($args, $default_args);
 
+				if($args['expand'] === '') // Empty string?
+					$args['expand'] = $default_args['expand'];
+
 				if(is_array($args['expand'])) // Force strings[].
 					$args['expand'] = array_map('strtolower', $args['expand']);
 
@@ -175,10 +178,13 @@ namespace wp_kb_articles // Root namespace.
 
 				# Output the response data; i.e., JSON or JSONP output handling.
 
-				if(!empty($_REQUEST['callback'])) // JSONP request?
+				$callback = $this->not_empty_coalesce( // Any of these.
+					$_REQUEST['jsonp'], $_REQUEST['_jsonp'], $_REQUEST['__jsonp'],
+					$_REQUEST['callback'], $_REQUEST['_callback'], $_REQUEST['__callback']
+				);
+				if($callback && ($callback = trim(stripslashes($callback))))
 				{
 					header('Content-Type: application/javascript; charset=UTF-8');
-					$callback = trim(stripslashes((string)$_REQUEST['callback']));
 					echo $callback.'('.json_encode($response).');';
 				}
 				header('Content-Type: application/json; charset=UTF-8');
