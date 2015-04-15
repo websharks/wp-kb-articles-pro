@@ -681,11 +681,11 @@ namespace wp_kb_articles
 			{
 				if(empty($_REQUEST[__NAMESPACE__]))
 				{
-					$path = $this->utils_url->current_path();
+					$path        = $this->utils_url->current_path();
+					$is_api_path = stripos($path, '/'.$this->slug.'/api/') === 0;
 
-					if(stripos($path, '/'.$this->slug.'/api/') === 0) // Quick check, followed by a longer check.
-						if(preg_match('/^\/'.preg_quote($this->slug, '/').'\/api\/query(?:[\/?#]|$)/i', $path))
-							$_REQUEST[__NAMESPACE__]['query_api'] = $_REQUEST;
+					if($is_api_path && preg_match('/^\/'.preg_quote($this->slug, '/').'\/api\/query(?:[\/?#]|$)/i', $path))
+						$_REQUEST[__NAMESPACE__]['query_api'] = $_REQUEST;
 				}
 				if(empty($_REQUEST[__NAMESPACE__]))
 					return; // Nothing to do here.
