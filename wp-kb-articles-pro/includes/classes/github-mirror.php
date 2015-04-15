@@ -201,6 +201,15 @@ namespace wp_kb_articles // Root namespace.
 			protected $ping_status;
 
 			/**
+			 * HIDs enable?
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @var string HIDs enable?
+			 */
+			protected $hids_enable;
+
+			/**
 			 * TOC enable?
 			 *
 			 * @since 150118 Adding TOC generation.
@@ -241,6 +250,7 @@ namespace wp_kb_articles // Root namespace.
 					'comment_status' => '', // `open` or `closed`.
 					'ping_status'    => '', // `open` or `closed`.
 
+					'hids_enable'    => '', // `true` or `false`.
 					'toc_enable'     => '', // `true` or `false`.
 				);
 				if(isset($args['github_issue']) && !isset($args['issue']))
@@ -306,7 +316,8 @@ namespace wp_kb_articles // Root namespace.
 				$this->comment_status = trim((string)$this->args['comment_status']);
 				$this->ping_status    = trim((string)$this->args['ping_status']);
 
-				$this->toc_enable = trim((string)$this->args['toc_enable']);
+				$this->hids_enable = trim((string)$this->args['hids_enable']);
+				$this->toc_enable  = trim((string)$this->args['toc_enable']);
 
 				# Convert to post ID, if possible.
 
@@ -387,7 +398,8 @@ namespace wp_kb_articles // Root namespace.
 				$this->comment_status = strtolower($this->comment_status);
 				$this->ping_status    = strtolower($this->ping_status);
 
-				$this->toc_enable = strtolower($this->toc_enable);
+				$this->hids_enable = strtolower($this->hids_enable);
+				$this->toc_enable  = strtolower($this->toc_enable);
 
 				if($this->body) $this->apply_body_filters();
 			}
@@ -442,6 +454,9 @@ namespace wp_kb_articles // Root namespace.
 				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
+				if(isset($this->hids_enable[0])) // Only if specified.
+					$this->plugin->utils_github->update_hids_enable($this->post->ID, $this->hids_enable);
+
 				if(isset($this->toc_enable[0])) // Only if specified.
 					$this->plugin->utils_github->update_toc_enable($this->post->ID, $this->toc_enable);
 
@@ -487,6 +502,9 @@ namespace wp_kb_articles // Root namespace.
 
 				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
+
+				if(isset($this->hids_enable[0])) // Only if specified.
+					$this->plugin->utils_github->update_hids_enable($this->post->ID, $this->hids_enable);
 
 				if(isset($this->toc_enable[0])) // Only if specified.
 					$this->plugin->utils_github->update_toc_enable($this->post->ID, $this->toc_enable);

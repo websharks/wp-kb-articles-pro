@@ -429,6 +429,7 @@ namespace wp_kb_articles
 
 					/* Related to TOC generation. */
 
+					'hids_generation_enable'                                           => '1', // `0|1`; enable?
 					'toc_generation_enable'                                            => '1', // `0|1`; enable?
 
 					/* Related to IP tracking. */

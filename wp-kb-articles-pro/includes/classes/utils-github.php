@@ -359,6 +359,41 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Gets HIDs-enable value for an article.
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string HIDs-enable value.
+			 */
+			public function get_hids_enable($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				return trim((string)get_post_meta($post_id, __NAMESPACE__.'_hids_enable', TRUE));
+			}
+
+			/**
+			 * Updates HIDs-enable value for an article.
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 * @param string  $hids_enable HIDs-enable value.
+			 */
+			public function update_hids_enable($post_id, $hids_enable)
+			{
+				if(!($post_id = (integer)$post_id))
+					return; // Not possible.
+
+				$hids_enable = trim((string)$hids_enable); // Can be empty.
+
+				update_post_meta($post_id, __NAMESPACE__.'_hids_enable', $hids_enable);
+			}
+
+			/**
 			 * Gets TOC-enable value for an article.
 			 *
 			 * @since 150118 Adding TOC generation.

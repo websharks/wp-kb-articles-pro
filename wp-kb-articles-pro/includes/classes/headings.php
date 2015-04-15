@@ -47,19 +47,31 @@ namespace wp_kb_articles // Root namespace.
 				if(!$post || !is_singular($this->plugin->post_type))
 					return $content; // Not applicable.
 
-				if(!($tocify = $this->tocify($content)) || !$tocify['toc_markup'])
-					return $content; // Not possible.
+				$hids_enable = (string)get_post_meta($post->ID, __NAMESPACE__.'_hids_enable', TRUE);
+				$hids_enable = isset($hids_enable[0]) ? filter_var($hids_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
+
+				if(!isset($hids_enable)) // Use default global setting?
+					$hids_enable = $this->plugin->options['hids_generation_enable'];
 
 				$toc_enable = (string)get_post_meta($post->ID, __NAMESPACE__.'_toc_enable', TRUE);
 				$toc_enable = isset($toc_enable[0]) ? filter_var($toc_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
 
-				if(!isset($toc_enable) && stripos($tocify['markup'], '%%toc%%') !== FALSE)
+				if(!isset($toc_enable) && stripos($content, '%%toc%%') !== FALSE)
 					$toc_enable = TRUE; // Content contains a replacement code.
 
 				if(!isset($toc_enable)) // Use default global setting?
-					$toc_enable = (boolean)$this->plugin->options['toc_generation_enable'];
+					$toc_enable = $this->plugin->options['toc_generation_enable'];
 
-				if(!$toc_enable) // Heading IDs only?
+				if($toc_enable) // Depends on HIDs.
+					$hids_enable = $toc_enable;
+
+				if(!$hids_enable && !$toc_enable)
+					return $content; // Disabled here.
+
+				if(!($tocify = $this->tocify($content)))
+					return $content; // Not possible.
+
+				if(!$toc_enable || !$tocify['toc_markup'])
 					return $tocify['markup'];
 
 				$toc                 = $tocify['toc_markup'];
