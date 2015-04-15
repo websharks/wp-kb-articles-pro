@@ -408,6 +408,7 @@ namespace wp_kb_articles
 					'github_mirror_api_key'                                            => '', // API key.
 					'github_mirror_author'                                             => '', // User login|ID.
 
+					'github_link_images_enable'                                        => '1', // `0|1`; enable?
 					'github_issue_feedback_enable'                                     => '1', // `0|1`; enable?
 					'github_markdown_parse_enable'                                     => '1', // `0|1`; enable?
 					'github_readonly_content_enable'                                   => '1', // `0|1`; enable?

@@ -51,7 +51,7 @@ namespace wp_kb_articles // Root namespace.
 				$hids_enable = isset($hids_enable[0]) ? filter_var($hids_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
 
 				if(!isset($hids_enable)) // Use default global setting?
-					$hids_enable = $this->plugin->options['hids_generation_enable'];
+					$hids_enable = (boolean)$this->plugin->options['hids_generation_enable'];
 
 				$toc_enable = (string)get_post_meta($post->ID, __NAMESPACE__.'_toc_enable', TRUE);
 				$toc_enable = isset($toc_enable[0]) ? filter_var($toc_enable, FILTER_VALIDATE_BOOLEAN) : NULL;
@@ -60,7 +60,7 @@ namespace wp_kb_articles // Root namespace.
 					$toc_enable = TRUE; // Content contains a replacement code.
 
 				if(!isset($toc_enable)) // Use default global setting?
-					$toc_enable = $this->plugin->options['toc_generation_enable'];
+					$toc_enable = (boolean)$this->plugin->options['toc_generation_enable'];
 
 				if($toc_enable) // Depends on HIDs.
 					$hids_enable = $toc_enable;

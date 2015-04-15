@@ -251,6 +251,24 @@ namespace wp_kb_articles // Root namespace.
 				                '    <tbody>'.
 				                $form_fields->select_row(
 					                array(
+						                'label'           => sprintf(__('Automatically Link Images?', $this->plugin->text_domain), esc_html($this->plugin->name)),
+						                'placeholder'     => __('Select an Option...', $this->plugin->text_domain),
+						                'name'            => 'github_link_images_enable',
+						                'current_value'   => $current_value_for('github_link_images_enable'),
+						                'allow_arbitrary' => FALSE,
+						                'options'         => array(
+							                '1' => __('Yes, automatically link HTML &lt;img&gt; tags and/or Markdown images; i.e., click to enlarge', $this->plugin->text_domain),
+							                '0' => __('No, leave as-is; I would rather my articles not be enhanced by this filter', $this->plugin->text_domain),
+						                ),
+						                'notes_after'     => '<p class="pmp-note pmp-info">'.sprintf(__('<strong>Tip:</strong> If you enable linked images, but you have a few articles where you\'d prefer to exclude this functionality; you can simply add a Custom Field to the article in WordPress: <code>%1$s_github_link_images=true|false</code>. You can also use %2$s to accomplish this. The YAML configuration option should be written as: <code>link-images: true|false</code>', $this->plugin->text_domain), esc_html(__NAMESPACE__), $this->plugin->utils_markup->x_anchor('https://github.com/websharks/wp-kb-articles/wiki/YAML-Front-Matter-for-GitHub-Integration', __('YAML Front Matter', $this->plugin->text_domain))).'</p>',
+					                )).
+				                '    </tbody>'.
+				                ' </table>'.
+
+				                ' <table style="margin-bottom:0;">'.
+				                '    <tbody>'.
+				                $form_fields->select_row(
+					                array(
 						                'label'           => sprintf(__('Enable Feedback via GitHub Issues?', $this->plugin->text_domain), esc_html($this->plugin->name)),
 						                'placeholder'     => __('Select an Option...', $this->plugin->text_domain),
 						                'name'            => 'github_issue_feedback_enable',

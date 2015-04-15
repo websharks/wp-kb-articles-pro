@@ -201,6 +201,15 @@ namespace wp_kb_articles // Root namespace.
 			protected $ping_status;
 
 			/**
+			 * Link images?
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @var string Link images?
+			 */
+			protected $link_images;
+
+			/**
 			 * HIDs enable?
 			 *
 			 * @since 150415 Enhancing TOC generation.
@@ -250,6 +259,7 @@ namespace wp_kb_articles // Root namespace.
 					'comment_status' => '', // `open` or `closed`.
 					'ping_status'    => '', // `open` or `closed`.
 
+					'link_images'    => '', // `true` or `false`.
 					'hids_enable'    => '', // `true` or `false`.
 					'toc_enable'     => '', // `true` or `false`.
 				);
@@ -316,6 +326,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->comment_status = trim((string)$this->args['comment_status']);
 				$this->ping_status    = trim((string)$this->args['ping_status']);
 
+				$this->link_images = trim((string)$this->args['link_images']);
 				$this->hids_enable = trim((string)$this->args['hids_enable']);
 				$this->toc_enable  = trim((string)$this->args['toc_enable']);
 
@@ -398,6 +409,7 @@ namespace wp_kb_articles // Root namespace.
 				$this->comment_status = strtolower($this->comment_status);
 				$this->ping_status    = strtolower($this->ping_status);
 
+				$this->link_images = strtolower($this->link_images);
 				$this->hids_enable = strtolower($this->hids_enable);
 				$this->toc_enable  = strtolower($this->toc_enable);
 
@@ -454,6 +466,9 @@ namespace wp_kb_articles // Root namespace.
 				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
+				if(isset($this->link_images[0])) // Only if specified.
+					$this->plugin->utils_github->update_link_images($this->post->ID, $this->link_images);
+
 				if(isset($this->hids_enable[0])) // Only if specified.
 					$this->plugin->utils_github->update_hids_enable($this->post->ID, $this->hids_enable);
 
@@ -503,6 +518,9 @@ namespace wp_kb_articles // Root namespace.
 				if(isset($this->issue[0])) // Only if used by this site.
 					$this->plugin->utils_github->update_issue_url($this->post->ID, $this->issue);
 
+				if(isset($this->link_images[0])) // Only if specified.
+					$this->plugin->utils_github->update_link_images($this->post->ID, $this->link_images);
+
 				if(isset($this->hids_enable[0])) // Only if specified.
 					$this->plugin->utils_github->update_hids_enable($this->post->ID, $this->hids_enable);
 
@@ -541,7 +559,7 @@ namespace wp_kb_articles // Root namespace.
 					return; // Nothing to do here.
 
 				$this->body = $this->plugin->utils_github->issue_redirect_filter($this->body);
-				$this->body = $this->plugin->utils_github->link_images_filter($this->body);
+				$this->body = $this->plugin->utils_github->link_images_filter($this->body, $this->post, $this->link_images);
 				$this->body = $this->plugin->utils_github->media_library_filter($this->body);
 
 				if($this->plugin->options['github_markdown_parse_enable'] && $this->content_type === 'text/markdown')

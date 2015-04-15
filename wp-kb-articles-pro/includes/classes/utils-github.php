@@ -359,6 +359,41 @@ namespace wp_kb_articles // Root namespace.
 			}
 
 			/**
+			 * Gets link images value for an article.
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 *
+			 * @return string Link images value.
+			 */
+			public function get_link_images($post_id)
+			{
+				if(!($post_id = (integer)$post_id))
+					return ''; // Not possible.
+
+				return trim((string)get_post_meta($post_id, __NAMESPACE__.'_github_link_images', TRUE));
+			}
+
+			/**
+			 * Updates link images value for an article.
+			 *
+			 * @since 150415 Enhancing TOC generation.
+			 *
+			 * @param integer $post_id WordPress post ID.
+			 * @param string  $link_images Link images value.
+			 */
+			public function update_link_images($post_id, $link_images)
+			{
+				if(!($post_id = (integer)$post_id))
+					return; // Not possible.
+
+				$link_images = trim((string)$link_images); // Can be empty.
+
+				update_post_meta($post_id, __NAMESPACE__.'_github_link_images', $link_images);
+			}
+
+			/**
 			 * Gets HIDs-enable value for an article.
 			 *
 			 * @since 150415 Enhancing TOC generation.
@@ -510,14 +545,28 @@ namespace wp_kb_articles // Root namespace.
 			 *
 			 * @since 150415 Filtering image tags in body.
 			 *
-			 * @param string $body The body of a GitHub markdown/HTML file.
+			 * @param string        $body The body of a GitHub markdown/HTML file.
+			 * @param \WP_Post|null $post A post object, else NULL if the post is new.
+			 * @param string|null   $link_images Link images. Yes or no?
 			 *
 			 * @return string Filtered body of a GitHub markdown/HTML file.
 			 */
-			public function link_images_filter($body)
+			public function link_images_filter($body, \WP_Post $post = NULL, $link_images = NULL)
 			{
 				if(!($body = trim((string)$body)))
 					return $body; // Nothing to do.
+
+				$link_images = trim((string)$link_images);
+
+				if($post && !isset($link_images[0])) // Use post value?
+					$link_images = $this->get_link_images($post->ID); // From `postmeta` table.
+				$link_images = isset($link_images[0]) ? filter_var($link_images, FILTER_VALIDATE_BOOLEAN) : NULL;
+
+				if(!isset($link_images)) // Use default global option?
+					$link_images = (boolean)$this->plugin->options['github_link_images_enable'];
+
+				if(!$link_images) // Not linking?
+					return $body; // Not applicable.
 
 				$_this = $this; // Needed by closures below.
 				$spcsm = $this->plugin->utils_string->spcsm_tokens($body, array('shortcodes', 'pre', 'code', 'samp', 'md_fences'));
