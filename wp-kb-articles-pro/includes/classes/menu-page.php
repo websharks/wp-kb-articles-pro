@@ -328,7 +328,7 @@ namespace wp_kb_articles // Root namespace.
 
 				                '</div>';
 
-				echo $this->panel(__('GitHub Repo Integration', $this->plugin->text_domain), $_panel_body, array());
+				echo $this->panel(__('GitHub Repo Integration', $this->plugin->text_domain), $_panel_body, array('pro_only' => TRUE));
 
 				unset($_panel_body); // Housekeeping.
 
@@ -353,7 +353,7 @@ namespace wp_kb_articles // Root namespace.
 				               '  </tbody>'.
 				               '</table>';
 
-				echo $this->panel(__('HIDs (Heading IDs)', $this->plugin->text_domain), $_panel_body, array());
+				echo $this->panel(__('HIDs (Heading IDs)', $this->plugin->text_domain), $_panel_body, array('pro_only' => TRUE));
 
 				unset($_panel_body); // Housekeeping.
 
@@ -379,7 +379,7 @@ namespace wp_kb_articles // Root namespace.
 				               '  </tbody>'.
 				               '</table>';
 
-				echo $this->panel(__('TOC (Table of Contents)', $this->plugin->text_domain), $_panel_body, array());
+				echo $this->panel(__('TOC (Table of Contents)', $this->plugin->text_domain), $_panel_body, array('pro_only' => TRUE));
 
 				unset($_panel_body); // Housekeeping.
 
@@ -720,7 +720,7 @@ namespace wp_kb_articles // Root namespace.
 					               '  </tbody>'.
 					               '</table>';
 
-					echo $this->panel(__('Article TOC', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>'));
+					echo $this->panel(__('Article TOC', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>', 'pro_only' => TRUE));
 
 					unset($_panel_body); // Housekeeping.
 
@@ -934,7 +934,7 @@ namespace wp_kb_articles // Root namespace.
 					               '  </tbody>'.
 					               '</table>';
 
-					echo $this->panel(__('Article TOC', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>'));
+					echo $this->panel(__('Article TOC', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>', 'pro_only' => TRUE));
 
 					$_panel_body = '<table>'.
 					               '  <tbody>'.
@@ -952,7 +952,7 @@ namespace wp_kb_articles // Root namespace.
 					               '  </tbody>'.
 					               '</table>';
 
-					echo $this->panel(__('Article TOC Styles', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>'));
+					echo $this->panel(__('Article TOC Styles', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>', 'pro_only' => TRUE));
 
 					$_panel_body = '<table>'.
 					               '  <tbody>'.
@@ -970,7 +970,7 @@ namespace wp_kb_articles // Root namespace.
 					               '  </tbody>'.
 					               '</table>';
 
-					echo $this->panel(__('Article TOC Scripts', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>'));
+					echo $this->panel(__('Article TOC Scripts', $this->plugin->text_domain), $_panel_body, array('icon' => '<i class="fa fa-code"></i>', 'pro_only' => TRUE));
 
 					unset($_panel_body); // Housekeeping.
 
