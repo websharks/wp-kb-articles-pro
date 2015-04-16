@@ -163,7 +163,7 @@ namespace wp_kb_articles // Root namespace.
 						$output['markup'] = preg_replace_callback($md_pre_code_regex, function ($m) use ($_md_pc_tokens)
 						{
 							$_md_pc_tokens[] = $m[0]; // Collect pre/code token.
-							return '%%toc-md-pc-token-'.count($_md_pc_tokens - 1).'%%';
+							return '%%toc-md-pc-token-'.(count($_md_pc_tokens) - 1).'%%';
 						}, $output['markup']); // Excluding pre/code via tokens.
 
 					$output['markup'] = preg_replace_callback($md_size_heading_regex, function ($m) use (&$headings)
