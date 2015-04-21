@@ -42,6 +42,7 @@ namespace wp_kb_articles // Root namespace.
 					'record_stats_via_ajax',
 					'github_event',
 					'query_api',
+					'tax_query_api',
 				);
 				$this->maybe_handle();
 			}
@@ -173,6 +174,31 @@ namespace wp_kb_articles // Root namespace.
 				header('Access-Control-Allow-Origin: *');
 
 				new query_api($query_args); // Handle.
+				exit(); // Exit script after event processing.
+			}
+
+			/**
+			 * Handle tax query API calls.
+			 *
+			 * @since 150421 Adding tax query API.
+			 *
+			 * @param mixed $request_args Input argument(s).
+			 */
+			protected function tax_query_api($request_args)
+			{
+				define('DONOTCACHEPAGE', TRUE);
+				define('ZENCACHE_ALLOWED', FALSE);
+
+				$this->plugin->utils_env->doing_exit(TRUE);
+
+				$query_args = (array)$request_args;
+
+				status_header(200); // Return response.
+				nocache_headers(); // Disallow browser cache.
+				header('Content-Type: application/json; charset=UTF-8');
+				header('Access-Control-Allow-Origin: *');
+
+				new tax_query_api($query_args); // Handle.
 				exit(); // Exit script after event processing.
 			}
 		}

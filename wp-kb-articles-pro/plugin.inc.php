@@ -686,6 +686,9 @@ namespace wp_kb_articles
 
 					if($is_api_path && preg_match('/^\/'.preg_quote($this->slug, '/').'\/api\/query(?:[\/?#]|$)/i', $path))
 						$_REQUEST[__NAMESPACE__]['query_api'] = $_REQUEST;
+
+					else if($is_api_path && preg_match('/^\/'.preg_quote($this->slug, '/').'\/api\/tax\-query(?:[\/?#]|$)/i', $path))
+						$_REQUEST[__NAMESPACE__]['tax_query_api'] = $_REQUEST;
 				}
 				if(empty($_REQUEST[__NAMESPACE__]))
 					return; // Nothing to do here.
