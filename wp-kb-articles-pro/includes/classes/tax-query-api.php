@@ -148,9 +148,6 @@ namespace wp_kb_articles // Root namespace.
 
 					if($this->expand('result.count'))
 						$_result['count'] = $this->decode($_term->count);
-
-					if($this->expand('result.levenshtein') && isset($_term->levenshtein))
-						$_result['levenshtein'] = $_term->levenshtein;
 				}
 				unset($_i, $_term, $_result); // Housekeeping.
 
