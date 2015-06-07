@@ -270,7 +270,7 @@ namespace wp_kb_articles // Root namespace.
 
 				$notice_markup = // Construct confirmation notice markup.
 					'<i class="fa fa-github fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'.
-					sprintf(__('KB Article ID: <code>%1$s</code> has been synced with GitHub.', $this->plugin->text_domain), esc_html($post->ID)).'<br />'.
+					sprintf(__('KB Article ID: <code>%1$s</code> has been synced with GitHub. <a href="%2$s" target="_blank">[?]</a>', $this->plugin->text_domain), esc_html($post->ID), esc_attr('http://wpkbarticles.com/r/what-happens-when-kb-article-is-synced-with-github/')).'<br />'.
 					'<span style="opacity:0.5;"><i class="fa fa-level-up fa-rotate-90" style="margin:0 .25em 0 1em;"></i> Title: <em>'.sprintf(__('"%1$s"', $this->plugin->text_domain), esc_html($post->post_title)).'</em></span>';
 
 				$this->plugin->enqueue_user_notice($notice_markup, array('for_user_id' => $current_user_id, 'transient' => TRUE));
@@ -308,7 +308,7 @@ namespace wp_kb_articles // Root namespace.
 
 				$notice_markup = // Construct confirmation notice markup.
 					'<i class="fa fa-github fa-3x" style="float:left; margin:0 .25em 0 0;"></i>'.
-					__('You forced an update by running the GitHub Processor manually.', $this->plugin->text_domain).'<br />'.
+					sprintf(__('You forced an update by running the GitHub Processor manually. <a href="%1$s" target="_blank">[?]</a>', $this->plugin->text_domain), esc_attr('http://wpkbarticles.com/r/what-happens-when-kb-article-is-synced-with-github/')).'<br />'.
 					'<span style="opacity:0.5;">'.__('If you don\'t see the changes you desire, please run it a second or third time.', $this->plugin->text_domain).'</span>';
 
 				$this->plugin->enqueue_user_notice($notice_markup, array('for_user_id' => $current_user_id, 'transient' => TRUE));
