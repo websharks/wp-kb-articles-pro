@@ -145,6 +145,11 @@ namespace wp_kb_articles // Root namespace.
 				}
 				unset($_tree_blob); // Housekeeping.
 
+				if(count($trees_blobs) >= 1000) $this->plugin->enqueue_notice // Notify site owner.
+					(
+						sprintf(__('<strong>%1$s&trade;</strong> found 1000+ items in a single GitHub folder. This can lead to GitHub API errors. Please use dated sub-directories so that you can avoid problems.', $this->plugin->text_domain), esc_html($this->plugin->name)),
+						array('persistent' => TRUE, 'push_to_top' => TRUE)
+					);
 				return $trees_blobs; // Array of all sub-trees and article blobs.
 			}
 
