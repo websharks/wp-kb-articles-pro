@@ -696,7 +696,8 @@ namespace wp_kb_articles // Root namespace.
 								                                                     '[author]'               => __('Author of the current article; i.e. author\'s display name.', $this->plugin->text_domain),
 								                                                     '[tags]'                 => __('A comma-delimited list of clickable tags the current article has.', $this->plugin->text_domain),
 								                                                     '[comments_number_text]' => __('How many comments the current article has; e.g. No Comments, 1 Comment, 4 Comments.', $this->plugin->text_domain),
-								                                                     '[date]'                 => __('The current article\'s publication date.', $this->plugin->text_domain),
+								                                                     '[pub_date]'             => __('The current article\'s publication date.', $this->plugin->text_domain),
+								                                                     '[mod_date]'             => __('The current article\'s last modification date.', $this->plugin->text_domain),
 							                                                     )),
 						               )).
 					               '  </tbody>'.
@@ -785,7 +786,8 @@ namespace wp_kb_articles // Root namespace.
 								                                                     '[github_repo_edit_url]'       => __('A URL leading to the underlying GitHub file for the article.', $this->plugin->text_domain),
 								                                                     '[wp_edit_url]'                => __('A URL leading to the underlying WP post editing station for the article.', $this->plugin->text_domain),
 								                                                     '[comments_number_text]'       => __('How many comments the current article has; e.g. No Comments, 1 Comment, 4 Comments.', $this->plugin->text_domain),
-								                                                     '[date]'                       => __('The current article\'s publication date.', $this->plugin->text_domain),
+								                                                     '[pub_date]'                   => __('The current article\'s publication date.', $this->plugin->text_domain),
+								                                                     '[mod_date]'                   => __('The current article\'s last modification date.', $this->plugin->text_domain),
 							                                                     )),
 						               )).
 					               '  </tbody>'.

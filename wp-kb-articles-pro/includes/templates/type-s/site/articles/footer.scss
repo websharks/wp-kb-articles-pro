@@ -191,8 +191,8 @@
 				{
 					& > .-by
 					{
-						display : block;
-						margin  : .8em 0 0 0;
+						display : inline-block;
+						margin  : .8em .15em 0 0;
 
 						@include laptops-or-smaller
 						{
@@ -205,24 +205,48 @@
 					{
 						display : inline-block;
 					}
-					& > .-date
+					& > .-dates
 					{
-						opacity    : 0.5;
-						font-size  : 90%;
-						font-style : italic;
-						display    : inline-block;
-						margin     : 0 0 0 1em;
+						display: block;
 
-						&::before
+						& > .-pub-date
 						{
-							content                : '\f133';
-							font-family            : FontAwesome;
-							-webkit-font-smoothing : antialiased;
+							opacity    : 0.5;
+							font-size  : 90%;
+							font-style : italic;
+							display    : inline-block;
 
-							float                  : left;
-							margin                 : 0 .5em 0 0;
+							&::before
+							{
+								content                : '\f133';
+								font-family            : FontAwesome;
+								-webkit-font-smoothing : antialiased;
 
-							font-style             : normal;
+								float                  : left;
+								margin                 : 0 .5em 0 0;
+
+								font-style             : normal;
+							}
+						}
+						& > .-mod-date
+						{
+							opacity    : 0.5;
+							font-size  : 90%;
+							font-style : italic;
+							display    : inline-block;
+							margin     : 0 0 0 1em;
+
+							& > span::before
+							{
+								content                : '\f040';
+								font-family            : FontAwesome;
+								-webkit-font-smoothing : antialiased;
+
+								float                  : left;
+								margin                 : 0 .5em 0 0;
+
+								font-style             : normal;
+							}
 						}
 					}
 				}
