@@ -35,9 +35,9 @@
 			(function() // Isolate this conditional sub-routine.
 			{
 				var processorButtonClass = namespaceSlug + '-github-processor',
-					$addNewH2 = $wpBodyContent.find('> .wrap > h2 > a[href*="/post-new.php"]');
+					$addNewH2 = $wpBodyContent.find('> .wrap > h1 > a[href*="/post-new.php"]');
 
-				$addNewH2.removeClass('add-new-h2').addClass('button'),
+				$addNewH2.removeClass('page-title-action').addClass('button'),
 					$addNewH2.before('<a href="#" class="' + processorButtonClass + ' button">' +
 					                 ' <i class="fa fa-github"></i> ' + i18n.githubProcessorButtonText +
 					                 '</a>'
