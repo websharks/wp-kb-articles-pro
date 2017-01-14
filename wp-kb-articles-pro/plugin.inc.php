@@ -9,7 +9,7 @@
 namespace wp_kb_articles
 {
 	if(!defined('WPINC')) // MUST have WordPress.
-		exit('Do NOT access this file directly: '.basename(__FILE__));
+		exit('Do NOT access this file directly.');
 
 	require_once dirname(__FILE__).'/includes/classes/abs-base.php';
 

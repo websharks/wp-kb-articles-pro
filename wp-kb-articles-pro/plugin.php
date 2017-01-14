@@ -20,7 +20,7 @@ Description: A WordPress plugin enabling email subscriptions for comments.
 Enables email subscriptions for comments in WordPress.
 */
 if(!defined('WPINC')) // MUST have WordPress.
-	exit('Do NOT access this file directly: '.basename(__FILE__));
+	exit('Do NOT access this file directly.');
 
 $GLOBALS['wp_php_rv'] = '5.3'; // Minimum version.
 if(require(dirname(__FILE__).'/submodules/wp-php-rv/wp-php-rv.php'))

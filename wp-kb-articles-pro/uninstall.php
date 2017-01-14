@@ -7,7 +7,7 @@
  * @license GNU General Public License, version 3
  */
 if(!defined('WPINC')) // MUST have WordPress.
-	exit('Do NOT access this file directly: '.basename(__FILE__));
+	exit('Do NOT access this file directly.');
 
 $GLOBALS['wp_php_rv'] = '5.3'; // Minimum version.
 if(require(dirname(__FILE__).'/submodules/wp-php-rv/wp-php-rv.php'))
