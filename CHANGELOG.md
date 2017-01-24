@@ -1,5 +1,6 @@
 = $v =
 
+- Fix mysterious dissapearance of manual 'Run GitHub Processor' and 'Rebuild Search Index' buttons.
 - Enhancing security by removing `basename(__FILE__)` from direct access notices.
 - Enhancing MySQL compatibility by removing `$` symbols from variable names in custom functions.
 

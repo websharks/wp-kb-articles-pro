@@ -5,15 +5,19 @@
 List of articles for editing.
 */
 #wpbody-content .wp-kb-articles-github-processor.button,
-#wpbody-content .wp-kb-articles-index-rebuild.button
+#wpbody-content .wp-kb-articles-index-rebuild.button,
+#wpbody-content .wp-kb-articles-github-processor.button + .button,
+#wpbody-content .wp-kb-articles-index-rebuild.button + .button
 {
-	margin : 0 .5em 0 0;
+	margin : .75em .5em 0 0;
 }
 /*
 Post edit button actions.
 */
 #post-body-content .wp-kb-articles-github-reprocess-button,
-#post-body-content .wp-kb-articles-github-edit-button
+#post-body-content .wp-kb-articles-github-edit-button,
+#post-body-content .wp-kb-articles-github-reprocess.button + .button,
+#post-body-content .wp-kb-articles-github-edit.button + .button
 {
 	float  : left;
 	margin : 5px 5px 0 0;

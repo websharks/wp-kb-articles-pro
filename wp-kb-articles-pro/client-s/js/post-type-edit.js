@@ -35,10 +35,10 @@
 			(function() // Isolate this conditional sub-routine.
 			{
 				var processorButtonClass = namespaceSlug + '-github-processor',
-					$addNewH2 = $wpBodyContent.find('> .wrap > h1 > a[href*="/post-new.php"]');
+					$addNewAnchor = $wpBodyContent.find('> .wrap > h1 + a');
 
-				$addNewH2.removeClass('page-title-action').addClass('button'),
-					$addNewH2.before('<a href="#" class="' + processorButtonClass + ' button">' +
+				$addNewAnchor.removeClass('page-title-action').addClass('button'),
+					$addNewAnchor.before('<a href="#" class="' + processorButtonClass + ' button">' +
 					                 ' <i class="fa fa-github"></i> ' + i18n.githubProcessorButtonText +
 					                 '</a>'
 					);
@@ -66,10 +66,10 @@
 			(function() // Isolate this conditional sub-routine.
 			{
 				var rebuildButtonClass = namespaceSlug + '-index-rebuild',
-					$addNewH2 = $wpBodyContent.find('> .wrap > h2 > a[href*="/post-new.php"]');
+					$addNewAnchor = $wpBodyContent.find('> .wrap > h1 + a');
 
-				$addNewH2.removeClass('add-new-h2').addClass('button'),
-					$addNewH2.before('<a href="#" class="' + rebuildButtonClass + ' button">' +
+				$addNewAnchor.removeClass('page-title-action').addClass('button'),
+					$addNewAnchor.before('<a href="#" class="' + rebuildButtonClass + ' button">' +
 					                 ' <i class="fa fa-database"></i> ' + i18n.indexRebuildButtonText +
 					                 '</a>'
 					);
